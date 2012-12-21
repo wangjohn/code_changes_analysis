@@ -1,30 +1,31 @@
 import re
 
 class CyclomaticComplexity:
-    """Note that you must initialize this class such that code_lines
-    does not include any comments."""
     def __init__(self, code):
-        self.code = code
+        self.total_lines = len(re.findall(r"$", code, re.MULTILINE))
+        self.code = self.remove_comments(code)
+        self.total_uncommented_lines = len(re.findall(r"$", self.code, re.MULTILINE))
+        self.commented_lines = self.total_lines - self.total_uncommented_lines
+        self.complexity = None
 
     def compute_complexity(self):
-        total_complexity = self.get_complexity(self.code)
+        if self.complexity != None:
+            return self.complexity
+        self.complexity = self.get_complexity(self.code)
+        return self.complexity
 
     def remove_comments(self, code):
         next_code = re.sub(r"=begin\s*($|\n)(.*?)=end\s*($|\n)", '', code, flags=re.DOTALL)
         return re.sub(r"#(.*?)$(?<=[^\"])", '', next_code, flags=re.MULTILINE)
 
     def get_complexity(self, line):
-        num_selections = 0
+        complexity = 0
         # the if and unless statements
-        num_selections += len(re.findall(r"(^|\s|\()(if|unless)\s", line))
-        num_selections += len(re.findall(r"(.*?)\s+\?\s+(.*?)\s+:\s+(.*?).", line)) # takes care of ruby ternary operators
+        complexity += len(re.findall(r"(^|\s|\()(if|unless)\s", line, flags=re.MULTILINE))
+        complexity += len(re.findall(r"(.*?)\s+\?\s+(.*?)\s+:\s+(.*?).", line)) # takes care of ruby ternary operators
 
         # all other control/syntax statements
-        num_selections += len(re.findall(r"^\s*(else|elsif|when|for|while|break|continue|until|return)", line))
-        num_selections += len(re.findall(r"\.each(\{|\()", line))
-        return num_selections 
-
-if __name__ == '__main__':
-    f = open("/home/john/test_controller.rb", 'r')
-    c = CyclomaticComplexity(f.read())
-    print c.remove_comments(c.code)
+        complexity += len(re.findall(r"^\s*(else|elsif|when|for|while|break|continue|until|return)", line, flags=re.MULTILINE))
+        complexity += len(re.findall(r"\.each(\{|\(|\s+do)", line, flags=re.MULTILINE))
+        complexity += len(re.findall(r"(&&|\|\||==|\sand\s|\sor\s|(\W|\s|^)!|\snot\s)", line))
+        return complexity 
