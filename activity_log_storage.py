@@ -14,9 +14,10 @@ class ActivityLogStorage:
                 key = lambda k : k.data_attributes[sorting_value])
         return self.sorted_by[sorting_value]
 
-    def get_clustered_by(self, cluster_value):
-        if cluster_value in self.clustered_by:
-            return self.clustered_by[cluster_value]
+    def get_clustered_by(self, cluster_value, secondary_sort_value):
+        key_tuple = (cluster_value, secondary_sort_value)
+        if key_tuple in self.clustered_by:
+            return self.clustered_by[key_tuple]
         new_cluster = {}
         for log in self.activity_logs:
             cluster_value_key = log.data_attributes[cluster_value]
@@ -24,8 +25,12 @@ class ActivityLogStorage:
                 new_cluster[cluster_value_key].append(log)
             else:
                 new_cluster[cluster_value_key] = [log]
-        self.clustered_by[cluster_value] = new_cluster
-        return self.clustered_by[cluster_value]
+        sorted_new_cluster = {}
+        for key, logs in new_cluster.iteritems():
+            sorted_new_cluster[key] = sorted(logs, key = lambda k :
+                    k.data_attributes[secondary_sort_value])
+        self.clustered_by[key_tuple] = sorted_new_cluster
+        return self.clustered_by[key_tuple]
 
 
 class ActivityLog:
