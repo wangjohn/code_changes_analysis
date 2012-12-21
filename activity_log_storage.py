@@ -81,7 +81,7 @@ class HeaderObject:
         if header == "id" or header == "user_account_id":
             return int(raw_string_val)
         if header == "created_at":
-            return parser.parse(raw_string_val)
+            return parser.parse(raw_string_val).replace(tzinfo=None)
         return raw_string_val
 
 

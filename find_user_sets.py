@@ -1,7 +1,26 @@
+
+
+def binary_search_on_attribute(activity_logs, value, start, end, 
+        attribute):
+    if end <= start:
+        return start
+    mid = (start+end)/2
+    current_attr = activity_logs.data_attributes[attribute]
+    if current_attr > value:
+        return binary_search_on_attribute(activity_logs, value, start,
+                mid-1, attribute)
+    elif current_attr < value:
+        return binary_search_on_attribute(activity_logs, value, mid+1,
+                end, attribute)
+    else:
+        return mid
+
 class FindUserSet:
     def __init__(self, activity_log_storage, settings):
         self.activity_log_storage = activity_log_storage
         self.settings = settings
+        self.before_after_users = None
+        self.only_before_users = None
 
     def find_users(self, controller, commit_datetime):
         logs_time_sorted = self.activity_log_storage.
@@ -20,14 +39,15 @@ class FindUserSet:
         all_before_users = self._get_users_in_time_window(
                 logs_time_sorted, lower_index, commit_index, 
                 "controller", controller)
-        before_after_users = self._get_users_in_time_window(
+        self.before_after_users = self._get_users_in_time_window(
                 logs_time_sorted, commit_index, upper_index,
                 "controller", controller, all_before_users)
 
         # construct the set of users who had activity only before a 
         # given commit, but not after
-        only_before_users = self._get_logs_not_in_set(all_before_users,
-                before_after_users)
+        self.only_before_users = self._get_logs_not_in_set(
+                all_before_users, before_after_users)
+
 
     def _get_users_in_time_window(self, activity_logs, start_index,
             end_index, data_attribute, required_attribute_value,

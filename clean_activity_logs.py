@@ -115,8 +115,6 @@ class FindUserSets:
                     output_object.add(activity_log_after.convert_to_row() + [1, j-(i+len(activity_logs_list[0])-1)] + extra_commit_data)
         return output_object
 
-    def get_activity_in_range(start_date, lag, user_account_id):
-
     def get_user_account_views(self, activity_logs, touched_logs):
         activity_logs = sorted(activity_logs, key = lambda k : k.user_account_id)
         print "touched logs: %s" % str(len(touched_logs))
