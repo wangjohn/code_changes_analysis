@@ -49,19 +49,17 @@ class FindUserSet:
         all_before_users = self._get_users_in_time_window(
                 logs_time_sorted, lower_index, commit_index, 
                 "controller", controller)
-        self.ba_users_before = self._get_users_in_time_window(
+        self.ba_users_after = self._get_users_in_time_window(
                 logs_time_sorted, commit_index, upper_index,
                 "controller", controller, all_before_users)
+        self.ba_users_before = self._get_users_in_time_windw(
+                logs_time_sorted, lower_index, commit_index,
+                "controller", controller, self.ba_users_after)
 
         # construct the set of users who had activity only before a 
         # given commit, but not after
-        self.only_before_users = {}
-        self.ba_users_after = {}
-        for key in self.all_before_users.iterkeys():
-            if key in self.ba_users_before:
-                self.ba_users_after = self.all_before_users[key]
-            else:
-                self.only_before_users[key] = self.all_before_users[key]
+        self.only_before_users_before = self._get_logs_not_in_set(
+                self.all_before_users, self.ba_users_before)
 
     def _get_users_in_time_window(self, activity_logs, start_index,
             end_index, data_attribute, required_attribute_value,
@@ -78,7 +76,7 @@ class FindUserSet:
     def _add_to_dict_with_attribute(attribute_dict, activity_log, 
             attribute, limit_attributes):
         attribute_id = activity_log.data_attributes[attribute]
-        if (not limit_attributes) or (attribute_id not in 
+        if limit_attributes == None or (attribute_id in 
                 limit_attributes):
             if attribute_id in attribute_dict:
                 attribute_dict[attribute_id].append(activity_log)
