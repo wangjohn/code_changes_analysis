@@ -10,8 +10,7 @@ class ActivityLogStorage:
     def get_sorted_by(self, sorting_value):
         if sorting_value in self.sorted_by:
             return self.sorted_by[sorting_value]
-        self.sorted_by[sorting_value] = sorted(self.activity_logs, 
-                key = lambda k : k.data_attributes[sorting_value])
+        self.sorted_by[sorting_value] = sorted(self.activity_logs, key = lambda k : k.data_attributes[sorting_value])
         return self.sorted_by[sorting_value]
 
     def get_clustered_by(self, cluster_value, secondary_sort_value):
@@ -27,8 +26,7 @@ class ActivityLogStorage:
                 new_cluster[cluster_value_key] = [log]
         sorted_new_cluster = {}
         for key, logs in new_cluster.iteritems():
-            sorted_new_cluster[key] = sorted(logs, key = lambda k :
-                    k.data_attributes[secondary_sort_value])
+            sorted_new_cluster[key] = sorted(logs, key = lambda k : k.data_attributes[secondary_sort_value])
         self.clustered_by[key_tuple] = sorted_new_cluster
         return self.clustered_by[key_tuple]
 
@@ -42,8 +40,7 @@ class ActivityLog:
 
     def _convert_to_hash(self, input_lines):
         for header in self.header_obj.get_headers():
-            self.data_attributes[header] = self.header_obj.
-                    get_attribute_from_header(header, input_lines)
+            self.data_attributes[header] = self.header_obj.get_attribute_from_header(header, input_lines)
 
     def add_attribute(self, attribute_header, value):
         if attribute_header not in self.header_obj.extra_attributes:
