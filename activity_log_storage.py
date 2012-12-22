@@ -113,13 +113,13 @@ class HeaderObject:
 class DiscreteDifferenceHeader(HeaderObject):
     def __init__(self):
         HeaderObject.__init__(self)
-        data_headers = {}
+        data_headers = {
+        }
         extra_headers = {
             "user_account_id",
             "controller",
-            "action",
-            "ip_address",
             "days_after_commit",
+            "datetime",
         }
         output_headers = [
             "user_account_id",
