@@ -15,8 +15,13 @@ class CommitAttributeFactory:
             before_datetime = commit.datetime-time_delta
             after_datetime = commit.datetime+time_delta
 
-    def create_discrete_difference_log(self, datetime, commit):
-        data_attributes = {'datetime': datetime}
+    def create_discrete_difference_log(self, datetime, commit, days_after_commit, user_account_id):
+        data_attributes = {
+            "datetime": datetime,
+            "days_after_commit": days_after_commit,
+            "user_account_id": user_account_id,
+            "controller": commit.controller,
+        }
         return DiscreteDifferenceLog(data_attributes, self.header_obj)
 
 

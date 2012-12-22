@@ -119,7 +119,6 @@ class DiscreteDifferenceHeader(HeaderObject):
             "controller",
             "action",
             "ip_address",
-            "session_id",
             "days_after_commit",
         }
         output_headers = [

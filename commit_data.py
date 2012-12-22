@@ -4,10 +4,11 @@ from dateutil import parser
 import cyclomatic_complexity
 
 class Commit:
-    def __init__(self, commit_id, filenames, datetime, num_files_changed, num_insertions, num_deletions):
+    def __init__(self, commit_id, filenames, controller, datetime, num_files_changed, num_insertions, num_deletions):
         self.datetime = datetime
         self.commit_id = commit_id
         self.filenames = filenames
+        self.controller = controller
         self.commit_quality_obj = None
 
         self.num_files_changed = num_files_changed
@@ -60,10 +61,11 @@ class CommitStorage:
             percentile_hash[current_commit] = mid_percentage
 
 class GitCommitScraper:
-    def __init__(self, directory_path, follow_path, filenames):
+    def __init__(self, directory_path, follow_path, filenames, controller):
         self.directory_path = directory_path
         self.follow_path = follow_path
         self.filenames = filenames
+        self.controller = controller
 
     def get_commit_shortstats(self, result):
         amount_changed_match = re.search("([0-9]+) files? changed(, ([0-9]+) insertions?\\(\\+\\))?(, ([0-9]+) deletions?\\(\\-\\))?", result)
@@ -90,7 +92,7 @@ class GitCommitScraper:
             time = parser.parse(commit_info_lines[2]).replace(tzinfo=None)
 
             # create a commit object and append it to the list of commits
-            commit = Commit(commit_id, self.filenames, time, files_changed, insertions, deletions)
+            commit = Commit(commit_id, self.filenames, self.controller, time, files_changed, insertions, deletions)
             all_commits.append(commit)
 
         if include_quality:
