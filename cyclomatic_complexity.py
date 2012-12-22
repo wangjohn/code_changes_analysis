@@ -10,24 +10,29 @@ class CommitCodeQuality:
         self.quality = None
         self._get_added_and_removed_code(commit_diff)
 
-    def _get_added_and_removed_code(self, diff)
-        self.added_code = '\n'.join(re.findall(r"^+[^++](.*?)$", diff, flags=re.MULTILINE))
-        self.removed_code = '\n'.join(re.findall(r"^-[^--](.*?)$", diff, flags=re.MULTILINE))
+    def _get_added_and_removed_code(self, diff):
+        self.added_code = '\n'.join(re.findall(r"^\+(?!\+)(.*?)$", diff, flags=re.MULTILINE))
+        self.removed_code = '\n'.join(re.findall(r"^-(?!-)(.*?)$", diff, flags=re.MULTILINE))
 
     def get_quality(self):
-        if self.quality == None
+        if self.quality == None:
             added_code_comp_obj = CyclomaticComplexity(self.added_code)
-            removed_code_comp_obj = CyclomaticCompleixty(self.removed_code)
+            removed_code_comp_obj = CyclomaticComplexity(self.removed_code)
 
             # get the average complexity per line of the lines that have 
             # been added, as well as those which have been removed
             added_avg_complexity = self._compute_avg(added_code_comp_obj.compute_complexity(), added_code_comp_obj.total_uncommented_lines)
             removed_avg_complexity = self._compute_avg(removed_code_comp_obj.compute_complexity(), removed_code_comp_obj.total_uncommented_lines)
+            print "added_avg_complexity: " + str(added_avg_complexity)
+            print "removed_avg_complexity: " + str(removed_avg_complexity)
 
             # get the percentage of comments per line for added and removed
             # lines of code
             comments_percentage_added = self._compute_avg(added_code_comp_obj.commented_lines, added_code_comp_obj.total_lines)
             comments_percentage_removed = self._compute_avg(removed_code_comp_obj.commented_lines, removed_code_comp_obj.total_lines)
+
+            print "comments_percentage_added: " + str(comments_percentage_added)
+            print "comments_percentage_removed: " + str(comments_percentage_removed)
 
             self.quality = self.quality_equation(added_avg_complexity, removed_avg_complexity, comments_percentage_added, comments_percentage_removed)
         return self.quality
@@ -37,7 +42,7 @@ class CommitCodeQuality:
             return 0
         return float(sample)/total
     
-    def quality_equation(added_avg_complexity, removed_avg_complexity, comments_percentage_added, comments_percentage_removed):
+    def quality_equation(self, added_avg_complexity, removed_avg_complexity, comments_percentage_added, comments_percentage_removed):
         return self.complexity_coef*(added_avg_complexity-removed_avg_complexity) + self.comment_coef*(comments_percentage_added-comments_percentage_removed)
 
 
