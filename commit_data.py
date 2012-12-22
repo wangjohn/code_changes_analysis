@@ -1,17 +1,26 @@
 import os
 import re
 from dateutil import parser
-from clean_activity_logs import *
+import cyclomatic_complexity
 
 class Commit:
     def __init__(self, commit_id, filenames, datetime, num_files_changed, num_insertions, num_deletions):
         self.datetime = datetime
         self.commit_id = commit_id
         self.filenames = filenames
-        
+        self.commit_quality_obj = None
+
         self.num_files_changed = num_files_changed
         self.num_insertions = num_insertions
         self.num_deletions = num_deletions
+
+    def set_commit_quality_obj(self, commit_quality_obj):
+        self.commit_quality_obj = commit_quality_obj
+
+    def get_quality(self):
+        if self.commit_quality_obj != None
+            return self.commit_quality_obj.get_quality()
+        return None
 
 class CommitStorage:
     def __init__(self, list_of_commits):
@@ -68,8 +77,8 @@ class GitCommitScraper:
             return 0
         return int(result)
     
-    def get_controller_commits(self, before, after):
-        git_command = "cd " + self.directorypath + "; git log --format='%H%n%ad%nend_commit' --shortstat --before='" + before + "' --after='" + after + "' --follow " + self.followpath  
+    def get_controller_commits(self, before, after, include_quality=True):
+        git_command = "cd %s; git log --format='%H%n%ad%nend_commit' --shortstat --before='%s' --after='%s' --follow %s" % (self.directory_path, before, after, self.followpath) 
         result = os.popen(git_command).read()
         split_result = result.split("end_commit")
 
@@ -84,5 +93,21 @@ class GitCommitScraper:
             commit = Commit(commit_id, self.filenames, time, files_changed, insertions, deletions)
             all_commits.append(commit)
 
+        if include_quality:
+            self.get_quality_of_commits(all_commits)
         return all_commits
+
+    def get_quality_of_commits(self, commits):
+        last_commit = None
+        for next_commit in commits:
+            if last_commit != None:
+                diff = self._get_diff_with_commit_ids(last_commit.commit_id, next_commit.commit_id)
+                quality_obj = cyclomatic_compleixty.CommitCodeQuality(diff)
+                next_commit.set_commit_quality_obj = quality_obj
+            last_commit = next_commit
+
+    def _get_diff_with_commit_ids(self, commit_id1, commit_id2):
+        git_command = "cd %s; git diff %s %s" % (self.directorypath, commit_id1, commit_id2)
+        return os.popen(git_command).read()
+
 
