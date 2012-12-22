@@ -3,19 +3,48 @@ import re
 from dateutil import parser
 from clean_activity_logs import *
 
-class FileCommit:
-    def __init__(self, filename, datetime, files_changed, insertions, deletions):
-        self.filename = filename
+class Commit:
+    def __init__(self, commit_id, filenames, datetime, num_files_changed, num_insertions, num_deletions):
         self.datetime = datetime
-        self.files_changed = files_changed
-        self.insertions = insertions
-        self.deletions = deletions
+        self.commit_id = commit_id
+        self.filenames = filenames
+        
+        self.num_files_changed = num_files_changed
+        self.num_insertions = num_insertions
+        self.num_deletions = num_deletions
 
-        self.fileschangedpercentile = None
-        self.lineschangedpercentile = None
-        self.insertionspercentile = None
-        self.deletionspercentile = None
+class CommitStorage:
+    def __init__(self, list_of_commits):
+        self.list_of_commits = list_of_commits
+        self.percentiles = {}
 
+    def get_percentiles(self, attribute):
+        percentile_hash = {}
+        sorted_commits = sorted(self.list_of_commits, key = lambda k : getattr(k, attribute))
+        total_num = len(sorted_commits)
+        last_value = None
+        length_same_seq = 0
+        for i in xrange(total_num):
+            percentage = float(i)/total_num
+            next_commit = self.list_of_commits[i]
+            next_value = getattr(next_commit, attribute)
+            if last_value == next_value:
+                length_same_seq += 1
+            else:
+                if length_same_seq > 0:
+                    self.set_mid_percentage(i, length_same_seq, total_num, percentile_hash)
+                length_same_seq = 0
+                percentile_hash[next_commit] = percentage
+
+            last_value = next_value
+        self.percentiles[attribute] = percentile_hash
+        return self.percentiles[attribute]
+
+    def set_mid_percentage(self, i, length_same_seq, total_num, percentile_hash):
+        mid_percentage = float(i - length_same_seq/2)/total_num
+        for j in xrange(i-length_same_seq,i,1):
+            current_commit = self.list_of_commits[j]
+            percentile_hash[current_commit] = mid_percentage
 
 def get_all_commits(begin_date, end_date):
     git_command = "cd ~/panjiva_web_branches/web; git rev-list --after='%s' --before='%s' --all" % (begin_date, end_date)    
