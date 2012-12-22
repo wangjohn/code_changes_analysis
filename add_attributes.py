@@ -1,6 +1,26 @@
 import sets 
+import datetime
+from activity_log_storage import *
 
-class AttributeFactory:
+class CommitAttributeFactory:
+    def __init__(self, commits, activity_log_storage):
+        self.commits = commits
+        self.activity_log_storage = activity_log_storage
+        self.header_obj = DiscreteDifferenceHeader()
+
+    def get_discrete_differences(self, commit, time_interval, total_time):
+        increments = (time_interval / total_time)
+        for i in xrange(increments):
+            time_delta = datetime.timedelta(days=time_interval*i)
+            before_datetime = commit.datetime-time_delta
+            after_datetime = commit.datetime+time_delta
+
+    def create_discrete_difference_log(self, datetime, commit):
+        data_attributes = {'datetime': datetime}
+        return DiscreteDifferenceLog(data_attributes, self.header_obj)
+
+
+class ActivityLogAttributeFactory:
     def __init__(self, logs_to_augment, activity_log_storage):
         self.logs_to_augment = logs_to_augment
         self.activity_log_storage = activity_log_storage
