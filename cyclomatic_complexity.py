@@ -23,16 +23,10 @@ class CommitCodeQuality:
             # been added, as well as those which have been removed
             added_avg_complexity = self._compute_avg(added_code_comp_obj.compute_complexity(), added_code_comp_obj.total_uncommented_lines)
             removed_avg_complexity = self._compute_avg(removed_code_comp_obj.compute_complexity(), removed_code_comp_obj.total_uncommented_lines)
-            print "added_avg_complexity: " + str(added_avg_complexity)
-            print "removed_avg_complexity: " + str(removed_avg_complexity)
-
             # get the percentage of comments per line for added and removed
             # lines of code
             comments_percentage_added = self._compute_avg(added_code_comp_obj.commented_lines, added_code_comp_obj.total_lines)
             comments_percentage_removed = self._compute_avg(removed_code_comp_obj.commented_lines, removed_code_comp_obj.total_lines)
-
-            print "comments_percentage_added: " + str(comments_percentage_added)
-            print "comments_percentage_removed: " + str(comments_percentage_removed)
 
             self.quality = self.quality_equation(added_avg_complexity, removed_avg_complexity, comments_percentage_added, comments_percentage_removed)
         return self.quality
