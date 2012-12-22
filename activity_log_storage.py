@@ -31,33 +31,77 @@ class ActivityLogStorage:
         return self.clustered_by[key_tuple]
 
 
-class ActivityLog:
-    def __init__(self, input_lines, header_object):
+class Log:
+    def __init__(self, header_object):
         self.header_obj = header_object
         self.data_attributes = {}
+
+    def set_data_attributes(self, data_attributes):
+        self.data_attributes = data_attributes
+        self.check_data_attributes()
+
+    def add_attribute(self, attribute_header, value):
+        if not self.header_obj.check_extra_headers_presence(attribute_header):
+            raise Exception("Attempting to add an undefined extra attribute: " + attribute_header)
+        self.data_attributes[attribute_header] = value
+
+    def check_data_attributes(self):
+        for attribute_header in self.data_attributes.iterkeys():
+            if not (self.header_obj.check_data_headers_presence(attribute_header) or self.header_obj.check_extra_headers_presence(attribute_header)):
+                raise Exception("There exists an undefined data attribute: " + attribute_header)
+        
+    def convert_to_row(self):
+        row = []
+        for data_header in self.header_obj.output_headers:
+            if data_header in self.data_attributes:
+                row.append(self.data_attributes[data_header])
+            else:
+                row.append('')
+        return row
+
+
+class ActivityLog(Log):
+    def __init__(self, input_lines, header_object):
+        Log.__init__(self, header_object)
         self._convert_to_hash(input_lines)
 
     def _convert_to_hash(self, input_lines):
         for header in self.header_obj.get_headers():
-            self.data_attributes[header] = self.header_obj.get_attribute_from_header(header, input_lines)
+            Log.data_attributes[header] = Log.header_obj.get_attribute_from_header(header, input_lines)
 
     def add_attribute(self, attribute_header, value):
-        if attribute_header not in self.header_obj.data_headers:
-            raise "Attempting to add an undefined attribute."
-        self.data_attributes[attribute_header] = value
+        Log.add_attribute(self, attribute_header, value)
 
     def convert_to_row(self):
-        row = []
-        for data_header in self.header_obj.output_attributes:
-            row.append(self.data_attributes[data_header])
-        return row
+        return Log.convert_to_row(self)
 
+class DiscreteDifferenceLog(Log):
+    def __init__(self, data_attributes, header_object):
+        Log.__init__(self, header_object)
+        Log.set_data_attributes(self, data_attributes) 
+
+    def add_attribute(self, attribute_header, value):
+        Log.add_attribute(self, attribute_header, value)
+
+    def convert_to_row(self):
+        return Log.convert_to_row(self)
 
 class HeaderObject:
     def __init__(self):
         self.data_headers = {}
         self.extra_headers = {}
         self.output_headers = []
+
+    def set_headers(self, data_headers, extra_headers, output_headers):
+        self.data_headers = data_headers
+        self.extra_headers = extra_headers
+        self.output_headers = output_headers
+
+    def check_extra_headers_presence(self, attribute):
+        return (attribute in self.extra_headers)
+
+    def check_data_headers_presence(self, attribute):
+        return (attribute in self.data_headers)
 
     def get_headers(self):
         return self.data_headers.keys
@@ -68,17 +112,33 @@ class HeaderObject:
 
 class DiscreteDifferenceHeader(HeaderObject):
     def __init__(self):
-        self.data_headers = {
-            "user_account_id": 1,
-            "controller": 2,
-            "action": 3,
-            "ip_address": 8,
-            "session_id": 10
-        }
-
-        self.extra_attributes = {
+        HeaderObject.__init__(self)
+        data_headers = {}
+        extra_headers = {
+            "user_account_id",
+            "controller",
+            "action",
+            "ip_address",
+            "session_id",
             "days_after_commit",
         }
+        output_headers = [
+            "user_account_id",
+            "session_id"
+        ]
+        HeaderObject.set_headers(self, data_headers, extra_headers, output_headers)
+
+    def check_extra_headers_presence(self, attribute):
+        return HeaderObject.check_extra_headers_presence(self, attribute)
+
+    def check_data_headers_presence(self, attribute):
+        return (attribute in self.data_headers)
+
+    def get_headers(self):
+        return HeaderObject.get_headers(self)
+
+    def get_attribute_from_header(self, header, input_lines):
+        return HeaderObject.get_attribute_from_header(self, header, input_lines)
 
 class ActivityLogHeader(HeaderObject):
     # unused input lines are:
@@ -88,7 +148,8 @@ class ActivityLogHeader(HeaderObject):
     #    "next_profile_activity_log_id": 9,
     #    "impersonated": 11
     def __init__(self):
-        self.data_headers = {
+        HeaderObject.__init__(self)
+        data_headers = {
             "id": 0,
             "user_account_id": 1,
             "controller": 2,
@@ -97,12 +158,8 @@ class ActivityLogHeader(HeaderObject):
             "ip_address": 8,
             "session_id": 10,
         }
-
-        self.extra_attributes = {
-
-        }
-
-        self.output_attributes = [
+        extra_headers = {}
+        output_headers = [
             "id",
             "user_account_id",
             "controller",
@@ -111,14 +168,29 @@ class ActivityLogHeader(HeaderObject):
             "ip_address",
             "session_id"
         ]
+        HeaderObject.set_headers(data_headers, extra_headers, output_headers)
     
+    def check_extra_headers_presence(self, attribute):
+        return HeaderObject.check_extra_headers_presence(self, attribute)
+
+    def check_data_headers_presence(self, attribute):
+        return (attribute in self.data_headers)
+
     def get_headers(self):
         return HeaderObject.get_headers(self)
 
     def get_attribute_from_header(self, header, input_lines):
-        raw_string_val = input_lines[self.data_headers[header]]
+        raw_string_val = HeaderObject.get_attribute_from_header(self, header, input_lines)
         if header == "id" or header == "user_account_id":
             return int(raw_string_val)
         if header == "created_at":
             return parser.parse(raw_string_val).replace(tzinfo=None)
         return raw_string_val
+
+
+if __name__ == '__main__':
+    ddh = DiscreteDifferenceHeader()
+    data_attributes = {"user_account_id":5, "controller":2}
+    a = DiscreteDifferenceLog(data_attributes, ddh)
+    a.add_attribute("session_id", 3)
+    print a.convert_to_row()
