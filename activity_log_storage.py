@@ -35,7 +35,6 @@ class ActivityLog:
     def __init__(self, input_lines, header_object):
         self.header_obj = header_object
         self.data_attributes = {}
-        self.added_attributes = {}
         self._convert_to_hash(input_lines)
 
     def _convert_to_hash(self, input_lines):
@@ -43,19 +42,45 @@ class ActivityLog:
             self.data_attributes[header] = self.header_obj.get_attribute_from_header(header, input_lines)
 
     def add_attribute(self, attribute_header, value):
-        if attribute_header not in self.header_obj.extra_attributes:
+        if attribute_header not in self.header_obj.data_headers:
             raise "Attempting to add an undefined attribute."
-        self.added_attribute[attribute_header] = value
+        self.data_attributes[attribute_header] = value
 
     def convert_to_row(self):
         row = []
-        for data_header in self.header_obj.data_headers.keys():
+        for data_header in self.header_obj.output_attributes:
             row.append(self.data_attributes[data_header])
-        for added_attribute in self.header_obj.extra_attributes.keys():
-            row.append(self.added_attributes[added_attribute])
         return row
 
+
 class HeaderObject:
+    def __init__(self):
+        self.data_headers = {}
+        self.extra_headers = {}
+        self.output_headers = []
+
+    def get_headers(self):
+        return self.data_headers.keys
+
+    def get_attribute_from_header(self, header, input_lines):
+        return input_lines[self.data_headers[header]]
+
+
+class DiscreteDifferenceHeader(HeaderObject):
+    def __init__(self):
+        self.data_headers = {
+            "user_account_id": 1,
+            "controller": 2,
+            "action": 3,
+            "ip_address": 8,
+            "session_id": 10
+        }
+
+        self.extra_attributes = {
+            "days_after_commit",
+        }
+
+class ActivityLogHeader(HeaderObject):
     # unused input lines are:
     #    "model_id": 4,
     #    "status": 5,
@@ -73,10 +98,22 @@ class HeaderObject:
             "session_id": 10,
         }
 
-        self.extra_attributes = {}
+        self.extra_attributes = {
 
+        }
+
+        self.output_attributes = [
+            "id",
+            "user_account_id",
+            "controller",
+            "action",
+            "created_at",
+            "ip_address",
+            "session_id"
+        ]
+    
     def get_headers(self):
-        return self.data_headers.keys
+        return HeaderObject.get_headers(self)
 
     def get_attribute_from_header(self, header, input_lines):
         raw_string_val = input_lines[self.data_headers[header]]
@@ -85,6 +122,3 @@ class HeaderObject:
         if header == "created_at":
             return parser.parse(raw_string_val).replace(tzinfo=None)
         return raw_string_val
-
-
-
