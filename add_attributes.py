@@ -1,6 +1,7 @@
 import sets 
 import datetime
 from activity_log_storage import *
+from find_user_sets import *
 
 class CommitAttributeFactory:
     def __init__(self, commits, activity_log_storage):
@@ -10,10 +11,25 @@ class CommitAttributeFactory:
 
     def get_discrete_differences(self, commit, time_interval, total_time):
         increments = (time_interval / total_time)
+        single_time_delta = datetime.timedelta(days=time_interval)
+        time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
         for i in xrange(increments):
             time_delta = datetime.timedelta(days=time_interval*i)
-            before_datetime = commit.datetime-time_delta
-            after_datetime = commit.datetime+time_delta
+
+            # get the logs in the before time window
+            before_index = binary_search_on_attribute(time_sorted_logs, commit.datetime-time_delta, 0, len(time_sorted_logs)-1, "created_at")
+            before_prev_index = binary_search_on_attribute(time_sorted_logs, commit.datetime-time_delta-single_time_delta, 0, before_index, "created_at")
+
+            # get the logs in the after time window
+            after_index = binary_search_on_attribute(time_sorted_logs, commit.datetime+time_delta, 0, len(time_sorted_logs)-1, "created_at")
+            after_prev_index = binary_search_on_attribute(time_sorted_logs, commit.datetime+time_delta-single_time_delta, 0, after_index, "created_at")
+
+    
+    def filter_logs_in_index_window(self, prev_index, end_index, activity_logs):
+        for i in xrange(prev_index, end_index+1, 1):
+            current_log = activity_logs[i]
+
+
 
     def create_discrete_difference_log(self, datetime, commit, days_after_commit, user_account_id):
         difference_log = DiscreteDifferenceLog({}, self.header_obj)
