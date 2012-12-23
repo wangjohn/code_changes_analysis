@@ -4,6 +4,14 @@ from activity_log_storage import *
 from find_user_sets import *
 
 class CommitAttributeFactory:
+    """
+    Class for creating discrete difference logs about a given commit.
+    We track a number of users, and create a single difference log
+    for each user, no matter how many actions they have around a commit.
+    However, we have some number of logs surrounding the commit, 
+    depending on how finely we want to observe the commit. We will have
+    a difference log every x days from -W to +W days after the commit.
+    """
     def __init__(self, commits, activity_log_storage, controller):
         self.commits = commits
         self.activity_log_storage = activity_log_storage
@@ -39,7 +47,18 @@ class CommitAttributeFactory:
                     user_clustered_output[uaid] = [current_log]
         return user_clustered_output
 
+    def create_logs_from_user_clustered_logs(self, user_clustered_logs, users, commit, datetime):
+        for user_account_id in users.iterkeys():
+            if user_account_id in user_clustered_logs:
+                attributes = self.compute_attributes_from_user_logs(user_clustered_logs[user_account_id])
+            else:
+                attributes = {"num_actions_in_controller": 0, "moving_avg_30_day": 0}
 
+    def compute_attributes_from_user_logs(self, user_logs):
+        num_actions_in_controller = len(user_logs)
+        num_actions_total = ""
+        moving_avg_10_day = "" # this comes on the day of the commit - time.delta
+        # get_moving_average of all actions here
 
     def create_discrete_difference_log(self, datetime, commit, days_after_commit, user_account_id):
         difference_log = DiscreteDifferenceLog({}, self.header_obj)
@@ -49,6 +68,12 @@ class CommitAttributeFactory:
         difference_log.add_attribute("datetime", datetime)
         return DiscreteDifferenceLog(data_attributes, self.header_obj)
 
+class MovingAverages:
+    def __init__(self, activity_log_storage):
+        self.users = users
+        self.activity_log_storage = activity_log_storage
+
+    def get_moving_average_actions(self, time_lag, 
 
 class ActivityLogAttributeFactory:
     def __init__(self, logs_to_augment, activity_log_storage):
