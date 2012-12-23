@@ -4,12 +4,13 @@ from activity_log_storage import *
 from find_user_sets import *
 
 class CommitAttributeFactory:
-    def __init__(self, commits, activity_log_storage):
+    def __init__(self, commits, activity_log_storage, controller):
         self.commits = commits
         self.activity_log_storage = activity_log_storage
         self.header_obj = DiscreteDifferenceHeader()
+        self.controller = controller
 
-    def get_discrete_differences(self, commit, time_interval, total_time):
+    def get_discrete_differences(self, commit, time_interval, total_time, users):
         increments = (time_interval / total_time)
         single_time_delta = datetime.timedelta(days=time_interval)
         time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
@@ -19,15 +20,24 @@ class CommitAttributeFactory:
             # get the logs in the before time window
             before_index = binary_search_on_attribute(time_sorted_logs, commit.datetime-time_delta, 0, len(time_sorted_logs)-1, "created_at")
             before_prev_index = binary_search_on_attribute(time_sorted_logs, commit.datetime-time_delta-single_time_delta, 0, before_index, "created_at")
+            user_clustered_logs_before = self.filter_logs_in_index_window(before_prev_index, before_index, time_sorted_logs, "controller", self.controller, users)
 
             # get the logs in the after time window
             after_index = binary_search_on_attribute(time_sorted_logs, commit.datetime+time_delta, 0, len(time_sorted_logs)-1, "created_at")
             after_prev_index = binary_search_on_attribute(time_sorted_logs, commit.datetime+time_delta-single_time_delta, 0, after_index, "created_at")
-
+            user_clustered_logs_after = self.filter_logs_in_index_window(after_prev_index, after_index, time_sorted_logs, "controller", self.controller, users)
     
-    def filter_logs_in_index_window(self, prev_index, end_index, activity_logs):
+    def filter_logs_in_index_window(self, prev_index, end_index, activity_logs, data_attribute, attribute, users):
+        user_clustered_output = {}
         for i in xrange(prev_index, end_index+1, 1):
             current_log = activity_logs[i]
+            uaid = current_log.data_attributes["user_account_id"]
+            if current_log.data_attributes[data_attribute] == attribute and uaid in users:
+                if uaid in user_clustered_output:
+                    user_clustered_output[uaid].append(current_log)
+                else:
+                    user_clustered_output[uaid] = [current_log]
+        return user_clustered_output
 
 
 
