@@ -73,7 +73,22 @@ class MovingAverages:
         self.users = users
         self.activity_log_storage = activity_log_storage
 
-    def get_moving_average_actions(self, time_lag, 
+    # this method provides a batched way to get moving averages a certain length of
+    # days before a datetime. Works best for large number of users (large enough that
+    # the user set constitutes a non-trivial number of the total users in that
+    # time period.
+    def get_moving_average_actions_batched(self, time_lag, end_time, users):
+        
+        moving_averages_hash = {}
+        for 
+
+    def get_moving_average_actions(self, time_lag, end_time, users):
+        sorted_user_logs = self.activity_log_storage.get_clustered_by("user_account_id", "created_at")
+        for user_account_id in users:
+            current_sorted = sorted_user_logs[user_account_id]
+            end_time_index = binary_search_on_attribute(current_sorted, end_time, 0, len(current_sorted)-1, "created_at")        
+            time_lag_index = binary_search_on_attribute(current_sorted, end_time-datetime.timedelta(days=time_lag), 0, end_time_index, "created_at")
+            actions = end_time_index - time_lag_index
 
 class ActivityLogAttributeFactory:
     def __init__(self, logs_to_augment, activity_log_storage):
