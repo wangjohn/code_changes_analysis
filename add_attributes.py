@@ -72,23 +72,78 @@ class MovingAverages:
     def __init__(self, activity_log_storage):
         self.users = users
         self.activity_log_storage = activity_log_storage
+        self.allowable_averages = sets.Set(["actions","sessions"])
 
     # this method provides a batched way to get moving averages a certain length of
     # days before a datetime. Works best for large number of users (large enough that
     # the user set constitutes a non-trivial number of the total users in that
     # time period.
-    def get_moving_average_actions_batched(self, time_lag, end_time, users):
-        
-        moving_averages_hash = {}
-        for 
+    def get_moving_averages_batched(self, time_lag, end_time, users):
+        raise Exception("Not yet implemented.")
 
-    def get_moving_average_actions(self, time_lag, end_time, users):
+    # Returns moving averages of actions performed in a given time period. The 
+    # time period is specified with an end_time and a time_lag before that.
+    # The number of actions or distinct sessions occuring inside of the time
+    # period will be returned. 
+    #
+    # One can also specify controllers to focus in on. If only_controllers
+    # is true, then only the actions and sessions for the controller will be
+    # presented
+    def get_moving_averages(self, time_lag, end_time, users, average_types={"actions","sessions"}, controllers=[]):
+        self.check_average_types(average_types)
         sorted_user_logs = self.activity_log_storage.get_clustered_by("user_account_id", "created_at")
+        averages = {}
         for user_account_id in users:
             current_sorted = sorted_user_logs[user_account_id]
             end_time_index = binary_search_on_attribute(current_sorted, end_time, 0, len(current_sorted)-1, "created_at")        
             time_lag_index = binary_search_on_attribute(current_sorted, end_time-datetime.timedelta(days=time_lag), 0, end_time_index, "created_at")
-            actions = end_time_index - time_lag_index
+            user_results = {}
+            windowed_logs = sorted_user_logs[time_lag_index:(end_time_index+1)]
+            if "actions" in average_types:
+                user_results["actions"] = self._get_actions(windowed_logs, controllers)
+            if "sessions" in average_types:
+                user_results["sessions"] = self._get_sessions(windowed_logs, controllers)
+            averages[user_account_id] = user_results
+        return averages
+
+    # Submethod which takes a list of logs in particular window, and returns the
+    # number of actions overall and for each controller.
+    def _get_actions(self, windowed_logs, controllers=[]):
+        total_actions = len(windowed_logs)
+        output = {"total_actions": total_actions}
+        if controllers:
+            for controller in controllers:
+                output[controller] = 0
+            for log in windowed_logs:
+                current_controller = log.data_attributes["controller"]
+                if current_controller in output:
+                    output[current_controller] += 1
+        if only_controllers:
+            del output["total_actions"]
+        return output
+
+    def _get_sessions(self, windowed_logs, controllers=[]):
+        session_sets = {"total_sessions" = sets.Set()}
+        for controller in controllers:
+            session_sets[controller] = sets.Set()
+        for log in windowed_logs:
+            current_controller = log.data_attributes["controller"]
+            session_id = log.data_attributes["session_id"]
+            session_sets["total_sessions"].add(session_id)
+            if current_controller in session_sets:
+                session_sets[current_controller].add(session_id)
+
+        # convert the sets into a count of the number of distinct sessions
+        output = {}
+        for name, s_set in session_sets.iteritems():
+            output[name] = len(s_set)
+        return output
+
+    def check_average_types(self, average_types):
+        for atype in average_types:
+            if atype not in self.allowable_averages:
+                raise Exception("Unknown average type: " + average_type)
+
 
 class ActivityLogAttributeFactory:
     def __init__(self, logs_to_augment, activity_log_storage):
