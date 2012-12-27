@@ -124,11 +124,19 @@ class DiscreteDifferenceHeader(HeaderObject):
             "controller",
             "days_after_commit",
             "datetime",
+            "commit_id",
+            "commit_datetime",
+            "commit_quality",
+            "commit_files_changed",
+            "commit_insertions",
+            "commit_deletions",
+            "actions_total_moving_avg",
+            "sessions_total_moving_avg",
+            "actions_controller_moving_avg",
+            "sessions_controller_moving_avg",
+            "moving_avg_timewindow"
         }
-        output_headers = [
-            "user_account_id",
-            "session_id"
-        ]
+        output_headers = list(extra_headers)
         HeaderObject.set_headers(self, data_headers, extra_headers, output_headers)
 
     def check_extra_headers_presence(self, attribute):

@@ -65,6 +65,7 @@ class CommitAttributeFactory:
             "sessions_controller_moving_avg": averages_hash["sessions_" + controller],
             "moving_avg_timewindow": moving_avg_timewindow
         }
+        difference_log.add_attributes_from_hash(attributes)
         return difference_log 
 
 class MovingAverages:
