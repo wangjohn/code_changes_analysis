@@ -59,6 +59,9 @@ class Log:
                 row.append('')
         return row
 
+    def get_header(self):
+        return self.header_obj
+
 
 class ActivityLog(Log):
     def __init__(self, input_lines, header_object):
@@ -75,6 +78,9 @@ class ActivityLog(Log):
     def convert_to_row(self):
         return Log.convert_to_row(self)
 
+    def get_header(self):
+        return Log.get_header(self)
+
 class DiscreteDifferenceLog(Log):
     def __init__(self, data_attributes, header_object):
         Log.__init__(self, header_object)
@@ -89,6 +95,9 @@ class DiscreteDifferenceLog(Log):
 
     def convert_to_row(self):
         return Log.convert_to_row(self)
+
+    def get_header(self):
+        return Log.get_header(self)
 
 class HeaderObject:
     def __init__(self):
