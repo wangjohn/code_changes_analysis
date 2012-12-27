@@ -130,11 +130,15 @@ class DiscreteDifferenceHeader(HeaderObject):
             "commit_files_changed",
             "commit_insertions",
             "commit_deletions",
+            "commit_files_changed_percentile",
+            "commit_insertions_percentile",
+            "commit_deletions_percentile",
             "actions_total_moving_avg",
             "sessions_total_moving_avg",
             "actions_controller_moving_avg",
             "sessions_controller_moving_avg",
-            "moving_avg_timewindow"
+            "moving_avg_timewindow",
+            "ba_user_set"
         }
         output_headers = list(extra_headers)
         HeaderObject.set_headers(self, data_headers, extra_headers, output_headers)

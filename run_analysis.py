@@ -8,15 +8,35 @@ def get_follow_path_from_controller(controller_name):
     return controller_name + "_controller.rb"
 
 def run_data(settings_obj):
-    find_user_set = FindUserSet(activity_log_storage, settings_obj)
+    # get the activity_log_storage object and create the finduserset
+    csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
+    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows)
+    find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
+
+    discrete_difference_logs = []
+    # For each controller in the git_scraper_controllers, get commits
+    # associated with them and perform the requisite operations
+    # for creating discrete_difference_logs and outputting
     for controller in settings_obj.get("git_scraper_controllers"):
-        git_commit_scraper = GitCommitScraper(settings.git_scraper_directory_path, get_follow_path_from_controller(controller), controller)
+        git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), get_follow_path_from_controller(controller), controller)
         commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_start"), settings_obj.get("global_end"))
         commit_storage = CommitStorage(commits)
         commit_storage.get_data_percentiles()
 
+        # Create the commit attribute factory, used to generate the 
+        # discrete difference logs
+        commit_attribute_factory = CommitAttributeFactory(commit_storage, activity_log_storage_obj, controller)
 
-    find_user_set.find_users(
+        # Once we have percentiles for each commit, start looking
+        # at each commit and creating discrete difference logs
+        for commit in commit_storage.get_commits():
+            ba_user_ids, only_before_user_ids = find_user_set_obj.compute_user_sets(controller, commit.datetime)
+            ba_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window")*2, ba_users_ids, True)
+            only_before_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window")*2, only_before_user_ids, False)
+            discrete_difference_logs.extend(ba_logs)
+            discrete_difference_logs.extend(only_before_logs)
+
+    #TODO: use the write_csv_data.py module to write the data
 
 def run_data_production():
     settings_obj = settings.Settings(production_env=True)

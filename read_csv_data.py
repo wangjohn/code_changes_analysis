@@ -1,4 +1,5 @@
 import csv
+import activity_log_storage
 
 def read_csv_data(filename, contains_header=True, verbose=True):
     all_rows = []
@@ -21,7 +22,7 @@ def convert_to_activity_logs(all_rows):
     header_obj = HeaderObject()
     for row in all_rows:
         activity_logs.append(ActivityLog(row, header_obj))
-    return ActivityLogStorage(activity_logs, header_obj)
+    return activity_log_storage.ActivityLogStorage(activity_logs, header_obj)
 
 if __name__ == '__main__':
     read_csv_data("/home/john/activity_log_out.csv")

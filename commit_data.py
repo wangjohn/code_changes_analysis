@@ -28,11 +28,17 @@ class CommitStorage:
         self.percentiles = {}
 
     def get_data_percentiles(self):
-        self.get_percentiles("num_insertions")
-        self.get_percentiles("num_deletions")
-        self.get_percentiles("num_files_changed")
+        self._get_percentiles("num_insertions")
+        self._get_percentiles("num_deletions")
+        self._get_percentiles("num_files_changed")
 
-    def get_percentiles(self, attribute):
+    def get_commits(self):
+        return self.list_of_commits
+
+    def get_commit_percentile(self, percentile_header, commit):
+        return self.percentiles[percentile_header][commit]
+
+    def _get_percentiles(self, attribute):
         percentile_hash = {}
         sorted_commits = sorted(self.list_of_commits, key = lambda k : getattr(k, attribute))
         total_num = len(sorted_commits)
@@ -45,7 +51,7 @@ class CommitStorage:
                 length_same_seq += 1
             else:
                 if length_same_seq > 0:
-                    self.set_mid_percentage(i, length_same_seq, total_num, percentile_hash, sorted_commits)
+                    self._set_mid_percentage(i, length_same_seq, total_num, percentile_hash, sorted_commits)
                 length_same_seq = 0
                 percentile_hash[next_commit] = float(i)/total_num 
 
@@ -53,7 +59,7 @@ class CommitStorage:
         self.percentiles[attribute] = percentile_hash
         return self.percentiles[attribute]
 
-    def set_mid_percentage(self, i, length_same_seq, total_num, percentile_hash, sorted_commits):
+    def _set_mid_percentage(self, i, length_same_seq, total_num, percentile_hash, sorted_commits):
         mid_percentage = float(i-1-length_same_seq/2)/total_num
         for j in xrange(i-length_same_seq-1,i,1):
             current_commit = sorted_commits[j]

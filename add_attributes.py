@@ -12,14 +12,14 @@ class CommitAttributeFactory:
     depending on how finely we want to observe the commit. We will have
     a difference log every x days from -W to +W days after the commit.
     """
-    def __init__(self, commits, activity_log_storage, controller):
-        self.commits = commits
+    def __init__(self, commit_storage, activity_log_storage, controller):
+        self.commit_storage = commit_storage
         self.activity_log_storage = activity_log_storage
         self.header_obj = DiscreteDifferenceHeader()
         self.controller = controller
         self.moving_averages = MovingAverages(activity_log_storage)
 
-    def get_discrete_differences(self, commit, time_interval, total_time, users):
+    def get_discrete_differences(self, commit, time_interval, total_time, users, ba_user_set=True):
         increments = (time_interval / total_time)
         single_time_delta = datetime.timedelta(days=time_interval)
         time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
@@ -33,20 +33,20 @@ class CommitAttributeFactory:
             before_averages = self.moving_averages.get_moving_averages(time_interval, before_datetime, users, controllers=[self.controller])
             after_averages = self.moving_averages.get_moving_averages(time_interval, after_datetime, users, controllers=[self.controller])
             
-            ddl_before = self.create_ddl_from_averages(before_averages, before_datetime, commit, -i, time_interval)
-            ddl_after = self.create_ddl_from_averages(after_averages, after_datetime, commit, i, time_interval)
+            ddl_before = self.create_ddl_from_averages(before_averages, before_datetime, commit, -i, time_interval, ba_user_set)
+            ddl_after = self.create_ddl_from_averages(after_averages, after_datetime, commit, i, time_interval, ba_user_set)
             discrete_differences_results.extend(ddl_before)
             discrete_differences_results.extend(ddl_after)
         return discrete_differences_results
 
-    def create_ddl_from_averages(self, averages, date_of_average, commit, days_after_commit, moving_avg_timewindow):
+    def create_ddl_from_averages(self, averages, date_of_average, commit, days_after_commit, moving_avg_timewindow, ba_user_set):
         ddl_logs = []
         for user_account_id, averages_hash in averages.iteritems():
-            new_ddl_log = self.create_discrete_difference_log(date_of_average, commit, days_after_commit, user_account_id, moving_avg_timewindow, averages_hash) 
+            new_ddl_log = self.create_discrete_difference_log(date_of_average, commit, days_after_commit, user_account_id, moving_avg_timewindow, ba_user_set, averages_hash) 
             ddl_logs.append(new_ddl_log)
         return ddl_logs
 
-    def create_discrete_difference_log(self, date, commit, days_after_commit, user_account_id, moving_avg_timewindow, averages_hash):
+    def create_discrete_difference_log(self, date, commit, days_after_commit, user_account_id, moving_avg_timewindow, ba_user_set, averages_hash):
         difference_log = DiscreteDifferenceLog({}, self.header_obj)
         attributes = {
             "user_acccount_id": user_account_id,
@@ -59,11 +59,15 @@ class CommitAttributeFactory:
             "commit_files_changed": commit.num_files_changed,
             "commit_insertions": commit.insertions,
             "commit_deletions": commit.deletions,
+            "commit_files_changed_percentile": self.commit_storage.get_commit_percentile("num_files_changed", commit),
+            "commit_insertions_percentile": self.commit_storage.get_commit_percentile("num_insertions", commit),
+            "commit_deletions_percentile": self.commit_storage.get_commit_percentile("num_deletions", commit),
             "actions_total_moving_avg": averages_hash["actions_total"],
             "sesssions_total_moving_avg": averages_hash["sessions_total"],
             "actions_controller_moving_avg": averages_hash["actions_" + controller],
             "sessions_controller_moving_avg": averages_hash["sessions_" + controller],
-            "moving_avg_timewindow": moving_avg_timewindow
+            "moving_avg_timewindow": moving_avg_timewindow,
+            "ba_user_set": ba_user_set
         }
         difference_log.add_attributes_from_hash(attributes)
         return difference_log 
