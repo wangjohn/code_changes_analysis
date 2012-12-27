@@ -17,78 +17,85 @@ class CommitAttributeFactory:
         self.activity_log_storage = activity_log_storage
         self.header_obj = DiscreteDifferenceHeader()
         self.controller = controller
+        self.moving_averages = MovingAverages(activity_log_storage)
 
     def get_discrete_differences(self, commit, time_interval, total_time, users):
         increments = (time_interval / total_time)
         single_time_delta = datetime.timedelta(days=time_interval)
         time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
+
+        discrete_differences_results = []
         for i in xrange(increments):
             time_delta = datetime.timedelta(days=time_interval*i)
+            before_datetime = commit.datetime - time_delta
+            after_datetime = commit.datetime + time_delta
 
-            # get the logs in the before time window
-            before_index = binary_search_on_attribute(time_sorted_logs, commit.datetime-time_delta, 0, len(time_sorted_logs)-1, "created_at")
-            before_prev_index = binary_search_on_attribute(time_sorted_logs, commit.datetime-time_delta-single_time_delta, 0, before_index, "created_at")
-            user_clustered_logs_before = self.filter_logs_in_index_window(before_prev_index, before_index, time_sorted_logs, "controller", self.controller, users)
+            before_averages = self.moving_averages.get_moving_averages(time_interval, before_datetime, users, controllers=[self.controller])
+            after_averages = self.moving_averages.get_moving_averages(time_interval, after_datetime, users, controllers=[self.controller])
+            
+            ddl_before = self.create_ddl_from_averages(before_averages, before_datetime, commit, -i, time_interval)
+            ddl_after = self.create_ddl_from_averages(after_averages, after_datetime, commit, i, time_interval)
+            discrete_differences_results.extend(ddl_before)
+            discrete_differences_results.extend(ddl_after)
+        return discrete_differences_results
 
-            # get the logs in the after time window
-            after_index = binary_search_on_attribute(time_sorted_logs, commit.datetime+time_delta, 0, len(time_sorted_logs)-1, "created_at")
-            after_prev_index = binary_search_on_attribute(time_sorted_logs, commit.datetime+time_delta-single_time_delta, 0, after_index, "created_at")
-            user_clustered_logs_after = self.filter_logs_in_index_window(after_prev_index, after_index, time_sorted_logs, "controller", self.controller, users)
-    
-    def filter_logs_in_index_window(self, prev_index, end_index, activity_logs, data_attribute, attribute, users):
-        user_clustered_output = {}
-        for i in xrange(prev_index, end_index+1, 1):
-            current_log = activity_logs[i]
-            uaid = current_log.data_attributes["user_account_id"]
-            if current_log.data_attributes[data_attribute] == attribute and uaid in users:
-                if uaid in user_clustered_output:
-                    user_clustered_output[uaid].append(current_log)
-                else:
-                    user_clustered_output[uaid] = [current_log]
-        return user_clustered_output
+    def create_ddl_from_averages(self, averages, date_of_average, commit, days_after_commit, moving_avg_timewindow):
+        ddl_logs = []
+        for user_account_id, averages_hash in averages.iteritems():
+            new_ddl_log = self.create_discrete_difference_log(date_of_average, commit, days_after_commit, user_account_id, moving_avg_timewindow, averages_hash) 
+            ddl_logs.append(new_ddl_log)
+        return ddl_logs
 
-    def create_logs_from_user_clustered_logs(self, user_clustered_logs, users, commit, datetime):
-        for user_account_id in users.iterkeys():
-            if user_account_id in user_clustered_logs:
-                attributes = self.compute_attributes_from_user_logs(user_clustered_logs[user_account_id])
-            else:
-                attributes = {"num_actions_in_controller": 0, "moving_avg_30_day": 0}
-
-    def compute_attributes_from_user_logs(self, user_logs):
-        num_actions_in_controller = len(user_logs)
-        num_actions_total = ""
-        moving_avg_10_day = "" # this comes on the day of the commit - time.delta
-        # get_moving_average of all actions here
-
-    def create_discrete_difference_log(self, datetime, commit, days_after_commit, user_account_id):
+    def create_discrete_difference_log(self, date, commit, days_after_commit, user_account_id, moving_avg_timewindow, averages_hash):
         difference_log = DiscreteDifferenceLog({}, self.header_obj)
-        difference_log.add_attribute("user_account_id", user_account_id)
-        difference_log.add_attribute("controller", commit.controller)
-        difference_log.add_attribute("days_after_commit", days_after_commit)
-        difference_log.add_attribute("datetime", datetime)
-        return DiscreteDifferenceLog(data_attributes, self.header_obj)
+        attributes = {
+            "user_acccount_id": user_account_id,
+            "controller": controller,
+            "days_after_commit": days_after_commit,
+            "datetime": date,
+            "commit_id": commit.commit_id,
+            "commit_datetime": commit.datetime,
+            "commit_quality": commit.get_quality(),
+            "commit_files_changed": commit.num_files_changed,
+            "commit_insertions": commit.insertions,
+            "commit_deletions": commit.deletions,
+            "actions_total_moving_avg": averages_hash["actions_total"],
+            "sesssions_total_moving_avg": averages_hash["sessions_total"],
+            "actions_controller_moving_avg": averages_hash["actions_" + controller],
+            "sessions_controller_moving_avg": averages_hash["sessions_" + controller],
+            "moving_avg_timewindow": moving_avg_timewindow
+        }
+        return difference_log 
 
 class MovingAverages:
     def __init__(self, activity_log_storage):
-        self.users = users
         self.activity_log_storage = activity_log_storage
         self.allowable_averages = sets.Set(["actions","sessions"])
 
-    # this method provides a batched way to get moving averages a certain length of
-    # days before a datetime. Works best for large number of users (large enough that
-    # the user set constitutes a non-trivial number of the total users in that
+    def _convert_averages_to_single_hash(self, averages_output):
+        output_hash = {}
+        for average_type, average_hash in averages_output.iteritems():
+            for item_subname, item_value in average_hash.iteritems():
+                new_name = average_type + "_" + item_subname
+                output_hash[new_name] = item_value
+        return output_hash
+
+    # this method provides a batched way to get moving averages 
+    # a certain length of days before a datetime. Works best for 
+    # large number of users (large enough that the user set 
+    # constitutes a non-trivial number of the total users in that
     # time period.
     def get_moving_averages_batched(self, time_lag, end_time, users):
         raise Exception("Not yet implemented.")
 
-    # Returns moving averages of actions performed in a given time period. The 
-    # time period is specified with an end_time and a time_lag before that.
-    # The number of actions or distinct sessions occuring inside of the time
-    # period will be returned. 
+    # Returns moving averages of actions performed in a given 
+    # time period. The  time period is specified with an end_time 
+    # and a time_lag before that. The number of actions or distinct 
+    # sessions occuring inside of the time period will be returned. 
     #
-    # One can also specify controllers to focus in on. If only_controllers
-    # is true, then only the actions and sessions for the controller will be
-    # presented
+    # One can also specify controllers to focus in on. 
+    # If only_controllers is true, then only the actions and 
+    # sessions for the controller will be presented.
     def get_moving_averages(self, time_lag, end_time, users, average_types={"actions","sessions"}, controllers=[]):
         self.check_average_types(average_types)
         sorted_user_logs = self.activity_log_storage.get_clustered_by("user_account_id", "created_at")
@@ -103,14 +110,15 @@ class MovingAverages:
                 user_results["actions"] = self._get_actions(windowed_logs, controllers)
             if "sessions" in average_types:
                 user_results["sessions"] = self._get_sessions(windowed_logs, controllers)
-            averages[user_account_id] = user_results
+            averages[user_account_id] = self._convert_averages_to_single_hash(user_results)
         return averages
 
-    # Submethod which takes a list of logs in particular window, and returns the
-    # number of actions overall and for each controller.
+    # Submethod which takes a list of logs in particular window, 
+    # and returns the number of actions overall and for each 
+    # controller.
     def _get_actions(self, windowed_logs, controllers=[]):
         total_actions = len(windowed_logs)
-        output = {"total_actions": total_actions}
+        output = {"total": total_actions}
         if controllers:
             for controller in controllers:
                 output[controller] = 0
@@ -119,21 +127,22 @@ class MovingAverages:
                 if current_controller in output:
                     output[current_controller] += 1
         if only_controllers:
-            del output["total_actions"]
+            del output["total"]
         return output
 
     def _get_sessions(self, windowed_logs, controllers=[]):
-        session_sets = {"total_sessions" = sets.Set()}
+        session_sets = {"total" = sets.Set()}
         for controller in controllers:
             session_sets[controller] = sets.Set()
         for log in windowed_logs:
             current_controller = log.data_attributes["controller"]
             session_id = log.data_attributes["session_id"]
-            session_sets["total_sessions"].add(session_id)
+            session_sets["total"].add(session_id)
             if current_controller in session_sets:
                 session_sets[current_controller].add(session_id)
 
-        # convert the sets into a count of the number of distinct sessions
+        # convert the sets into a count of the number of 
+        # distinct sessions
         output = {}
         for name, s_set in session_sets.iteritems():
             output[name] = len(s_set)

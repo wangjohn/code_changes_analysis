@@ -80,6 +80,10 @@ class DiscreteDifferenceLog(Log):
         Log.__init__(self, header_object)
         Log.set_data_attributes(self, data_attributes) 
 
+    def add_attributes_from_hash(self, attributes):
+        for attribute_header, value in attributes.iteritems():
+            self.add_attribute(attribute_header, value)
+
     def add_attribute(self, attribute_header, value):
         Log.add_attribute(self, attribute_header, value)
 
