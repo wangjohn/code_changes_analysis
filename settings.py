@@ -29,6 +29,7 @@ class Settings:
         # CSV data
         self.csv_data_filename = "/home/john/activity_log_out.csv"
         self.csv_data_contains_header = True
+        self.output_filename = "/home/john/discrete_difference_logs.csv"
     
     def _overwrite_with_test_settings(self):
         self.global_start = "10/1/2012"

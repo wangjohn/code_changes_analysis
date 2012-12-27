@@ -36,7 +36,9 @@ def run_data(settings_obj):
             discrete_difference_logs.extend(ba_logs)
             discrete_difference_logs.extend(only_before_logs)
 
-    #TODO: use the write_csv_data.py module to write the data
+    # use the write_csv_data.py module to write the data
+    writer_obj = write_csv_data.WriteCSV()
+    writer_obj.convert_to_csv(discrete_difference_logs, settings_obj.get("output_filename"))
 
 def run_data_production():
     settings_obj = settings.Settings(production_env=True)
