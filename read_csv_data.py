@@ -17,7 +17,7 @@ def read_csv_data(filename, contains_header=True, verbose=True):
 
         return all_rows
 
-def convert_to_activity_logs(all_rows):
+def convert_to_activity_logs(all_rows, settings_obj):
     activity_logs = []
     print "Creating Activity Logs"
     for row in all_rows:

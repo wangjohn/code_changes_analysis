@@ -16,7 +16,7 @@ def run_data(settings_obj):
     csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
     print "Finished importing CSV data."
     print "Converting data to activity_log_storage object..."
-    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows)
+    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows, settings_obj)
     print "Finished converting to activity_log_storage_object."
     print "Finding user sets..."
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)

@@ -4,7 +4,7 @@ def binary_search_on_attribute(activity_logs, value, start, end, attribute):
     if end <= start:
         return start
     mid = (start+end)/2
-    current_attr = activity_logs[mid].data_attributes[attribute]
+    current_attr = activity_logs[mid].get(attribute)
     if current_attr > value:
         return binary_search_on_attribute(activity_logs, value, start, mid-1, attribute)
     elif current_attr < value:
@@ -56,12 +56,12 @@ class FindUserSet:
         users = {}
         for i in xrange(start_index, end_index+1):
             activity_log = activity_logs[i]
-            if activity_log.data_attributes[data_attribute] == required_attribute_value:
+            if activity_log.get(data_attribute) == required_attribute_value:
                 self._add_to_dict_with_attribute(users, activity_log, "user_account_id", limit_ua_ids)
         return users
 
     def _add_to_dict_with_attribute(self, attribute_dict, activity_log, attribute, limit_attributes):
-        attribute_id = activity_log.data_attributes[attribute]
+        attribute_id = activity_log.get(attribute)
         if limit_attributes == None or (attribute_id in limit_attributes):
             if attribute_id in attribute_dict:
                 attribute_dict[attribute_id].append(activity_log)
