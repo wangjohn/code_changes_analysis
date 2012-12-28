@@ -1,9 +1,8 @@
 from dateutil import parser
 
 class ActivityLogStorage:
-    def __init__(self, activity_logs, header_object):
+    def __init__(self, activity_logs):
         self.activity_logs = activity_logs
-        self.header_obj = header_object
         self.sorted_by = {}
         self.clustered_by = {}
 
