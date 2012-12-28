@@ -1,5 +1,6 @@
 import settings
 import read_csv_data
+import write_csv_data
 from activity_log_storage import *
 from add_attributes import *
 from find_user_sets import *
@@ -49,8 +50,10 @@ def run_data(settings_obj):
             discrete_difference_logs.extend(only_before_logs)
 
     # use the write_csv_data.py module to write the data
+    print "Writing data to CSV."
     writer_obj = write_csv_data.WriteCSV()
     writer_obj.convert_to_csv(discrete_difference_logs, settings_obj.get("output_filename"))
+    print "Data written to: " + settings_obj.get("output_filename")
 
 def run_data_production():
     settings_obj = settings.Settings(production_env=True)

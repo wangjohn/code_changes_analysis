@@ -37,7 +37,7 @@ class Settings:
         self.global_end = "11/24/2012"
 
         self.git_scraper_controllers = ["search"]
-        self.csv_data_filename = "/home/john/activity_log_out_test.csv"
+        #self.csv_data_filename = "/home/john/activity_log_out_test.csv"
 
     def get(self, setting):
         return getattr(self, setting)
