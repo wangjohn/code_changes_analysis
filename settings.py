@@ -11,6 +11,7 @@ class Settings:
 
         # The time before and after a commit to examine
         self.commit_half_window = 2
+        self.commit_window_interval = 1
 
         # Git scraper file locations
         self.git_scraper_directory_path = "/home/john/panjiva_web_branches/web/app/controllers"

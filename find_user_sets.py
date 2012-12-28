@@ -27,7 +27,7 @@ class FindUserSet:
         ba_users_after, ba_users_before, only_before_users_before = self.compute_user_log_sets(controller, commit_datetime)
         ba_user_account_ids = ba_users_after.keys()
         only_before_user_account_ids = only_before_users_before.keys()
-        return (ba_user_acount_ids, only_before_user_account_ids)
+        return (ba_user_account_ids, only_before_user_account_ids)
 
     # Returns a list of action_logs. The first result gives the action
     # logs corresponding to the users who saw a controller both before
@@ -39,17 +39,17 @@ class FindUserSet:
         logs_time_sorted = self.activity_log_storage.get_sorted_by("created_at")
         commit_index = binary_search_on_attribute(logs_time_sorted, commit_datetime, 0, len(logs_time_sorted)-1, "created_at")
         lower_index = binary_search_on_attribute(logs_time_sorted, commit_datetime-datetime.timedelta(days=self.settings.get("commit_half_window")), 0, commit_index, "created_at")
-        upper_index = binary_search_on_attributes(logs_time_sorted, commit_datetime+datetime.timedelta(days=self.settings.get("commit_half_window")), commit_index, len(logs_time_sorted)-1, "created_at")
+        upper_index = binary_search_on_attribute(logs_time_sorted, commit_datetime+datetime.timedelta(days=self.settings.get("commit_half_window")), commit_index, len(logs_time_sorted)-1, "created_at")
         
         # get the dictionaries containing all users who had activity
         # before a given commit, and before and after a commit
         all_before_users = self._get_users_in_time_window(logs_time_sorted, lower_index, commit_index, "controller", controller)
         ba_users_after = self._get_users_in_time_window(logs_time_sorted, commit_index, upper_index, "controller", controller, all_before_users)
-        ba_users_before = self._get_users_in_time_window(logs_time_sorted, lower_index, commit_index, "controller", controller, self.ba_users_after)
+        ba_users_before = self._get_users_in_time_window(logs_time_sorted, lower_index, commit_index, "controller", controller, ba_users_after)
 
         # construct the set of users who had activity only before a 
         # given commit, but not after
-        only_before_users_before = self._get_logs_not_in_set(self.all_before_users, self.ba_users_before)
+        only_before_users_before = self._get_logs_not_in_set(all_before_users, ba_users_before)
         return (ba_users_after, ba_users_before, only_before_users_before)
 
     def _get_users_in_time_window(self, activity_logs, start_index, end_index, data_attribute, required_attribute_value, limit_ua_ids=None):
