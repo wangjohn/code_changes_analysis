@@ -19,14 +19,14 @@ class ActivityLogStorage:
             return self.clustered_by[key_tuple]
         new_cluster = {}
         for log in self.activity_logs:
-            cluster_value_key = log.data_attributes[cluster_value]
+            cluster_value_key = log.get(cluster_value)
             if cluster_value_key in new_cluster:
                 new_cluster[cluster_value_key].append(log)
             else:
                 new_cluster[cluster_value_key] = [log]
         sorted_new_cluster = {}
         for key, logs in new_cluster.iteritems():
-            sorted_new_cluster[key] = sorted(logs, key = lambda k : k.data_attributes[secondary_sort_value])
+            sorted_new_cluster[key] = sorted(logs, key = lambda k : k.get(secondary_sort_value))
         self.clustered_by[key_tuple] = sorted_new_cluster
         return self.clustered_by[key_tuple]
 
@@ -62,24 +62,27 @@ class Log:
     def get_header(self):
         return self.header_obj
 
+class ActivityLog:
+    def __init__(self, input_lines, settings_obj):
+        self.settings_obj = settings_obj
+        self._convert_input_lines(input_lines, settings_obj)
 
-class ActivityLog(Log):
-    def __init__(self, input_lines, header_object):
-        Log.__init__(self, header_object)
-        self._convert_to_hash(input_lines)
+    def _convert_input_lines(self, input_lines, settings_obj):
+        for attribute, index in settings_obj.get("csv_unchanged_headers"):
+            setattr(self, attribute, input_lines[index])
+        for attribute, index in settings_obj.get("csv_int_headers"):
+            setattr(self, attribute, int(input_lines[index]))
+        for attribute, index in settings_obj.get("csv_date_headers"):
+            setattr(self, attribute, parser.parse(input_lines[index]).replace(tzinfo=None)
 
-    def _convert_to_hash(self, input_lines):
-        for header in self.header_obj.get_headers():
-            self.add_attribute(header, Log.get_header(self).get_attribute_from_header(header, input_lines))
-
-    def add_attribute(self, attribute_header, value):
-        Log.add_attribute(self, attribute_header, value)
+    def get(self, attribute):
+        return getattr(self, attribute)
 
     def convert_to_row(self):
-        return Log.convert_to_row(self)
-
-    def get_header(self):
-        return Log.get_header(self)
+        output = []
+        for attribute in self.settings_obj.get("csv_output_row_headers"):
+            output.append(self.get(attribute))
+        return output
 
 class DiscreteDifferenceLog(Log):
     def __init__(self, data_attributes, header_object):
@@ -163,53 +166,6 @@ class DiscreteDifferenceHeader(HeaderObject):
 
     def get_attribute_from_header(self, header, input_lines):
         return HeaderObject.get_attribute_from_header(self, header, input_lines)
-
-class ActivityLogHeader(HeaderObject):
-    def __init__(self):
-        HeaderObject.__init__(self)
-        data_headers = {
-            "id": 0,
-            "user_account_id": 1,
-            "controller": 2,
-            "action": 3,
-            "model_id": 4,
-            "status": 5,
-            "created_at": 6,
-            "query_params": 7,
-            "ip_address": 8,
-            "next_profile_activity_log_id": 9,
-            "session_id": 10,
-            "impersonated": 11
-        }
-        extra_headers = {}
-        output_headers = [
-            "id",
-            "user_account_id",
-            "controller",
-            "action",
-            "created_at",
-            "ip_address",
-            "session_id"
-        ]
-        HeaderObject.set_headers(self, data_headers, extra_headers, output_headers)
-    
-    def check_extra_headers_presence(self, attribute):
-        return HeaderObject.check_extra_headers_presence(self, attribute)
-
-    def check_data_headers_presence(self, attribute):
-        return (attribute in self.data_headers)
-
-    def get_headers(self):
-        return HeaderObject.get_headers(self)
-
-    def get_attribute_from_header(self, header, input_lines):
-        raw_string_val = HeaderObject.get_attribute_from_header(self, header, input_lines)
-        if header == "id" or header == "user_account_id":
-            return int(raw_string_val)
-        if header == "created_at":
-            return parser.parse(raw_string_val).replace(tzinfo=None)
-        return raw_string_val
-
 
 if __name__ == '__main__':
     ddh = DiscreteDifferenceHeader()

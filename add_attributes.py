@@ -128,7 +128,7 @@ class MovingAverages:
             for controller in controllers:
                 output[controller] = 0
             for log in windowed_logs:
-                current_controller = log.data_attributes["controller"]
+                current_controller = log.get("controller")
                 if current_controller in output:
                     output[current_controller] += 1
         if only_controllers:
@@ -140,8 +140,8 @@ class MovingAverages:
         for controller in controllers:
             session_sets[controller] = sets.Set()
         for log in windowed_logs:
-            current_controller = log.data_attributes["controller"]
-            session_id = log.data_attributes["session_id"]
+            current_controller = log.get("controller")
+            session_id = log.get("session_id")
             session_sets["total"].add(session_id)
             if current_controller in session_sets:
                 session_sets[current_controller].add(session_id)
@@ -180,12 +180,12 @@ class ActivityLogAttributeFactory:
         user_accounts = self.activity_log_storage.get_clustered_by(cluster_val, secondary_sort_val)
         attribute_to_update = attribute_name + "_total_count"
         for log in self.logs_to_augment:
-            ua_id = log.data_attributes["user_account_id"]
+            ua_id = log.get("user_account_id")
             logs_to_check = user_accounts[ua_id]
             if sessions:
                 session_ids = sets.Set()
                 for current_log in logs_to_check:
-                    session_ids.add(current_log.data_attributes["session_id"])
+                    session_ids.add(current_log.get("session_id"))
                 output = len(session_ids)
             else:
                 output = len(logs_to_check)
@@ -200,8 +200,8 @@ class ActivityLogAttributeFactory:
 
     def _actions_moving_average_subprod(self, log, user_accounts):
         # get the relevant info about this activity log
-        ua_id = log.data_attributes["user_account_id"]
-        current_created_at = log.data_attributes["created_at"]
+        ua_id = log.get("user_account_id")
+        current_created_at = log.get("created_at")
         logs_to_check = user_accounts[ua_id]
 
         # get the indices corresponding to current log and also the
@@ -213,8 +213,8 @@ class ActivityLogAttributeFactory:
         return actions_in_window
 
     def _sessions_moving_average_subprod(self, log, user_accounts):
-        ua_id = log.data_attributes["user_account_id"]
-        current_created_at = log.data_attributes["created_at"]
+        ua_id = log.get("user_account_id")
+        current_created_at = log.get("created_at")
         logs_to_check = user_accounts[ua_id]
 
         end_index = binary_search_on_attribute(logs_to_check, current_created_at, 0, len(logs_to_check)-1, "created_at")
@@ -223,7 +223,7 @@ class ActivityLogAttributeFactory:
         session_ids = sets.Set() 
         for i in xrange(start_index, end_index+1):
             current_log = logs_to_check[i]
-            session_ids.add(current_log.data_attributes["session_id"])
+            session_ids.add(current_log.get("session_id"))
 
         # returns distinct session_ids in the time span
         return len(session_ids)
