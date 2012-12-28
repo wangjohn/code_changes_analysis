@@ -41,7 +41,7 @@ class Log:
         self.check_data_attributes()
 
     def add_attribute(self, attribute_header, value):
-        if not self.header_obj.check_extra_headers_presence(attribute_header):
+        if not (self.header_obj.check_extra_headers_presence(attribute_header) or self.header_obj.check_data_headers_presence(attribute_header)):
             raise Exception("Attempting to add an undefined extra attribute: " + attribute_header)
         self.data_attributes[attribute_header] = value
 

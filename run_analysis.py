@@ -11,18 +11,28 @@ def get_follow_path_from_controller(controller_name):
 
 def run_data(settings_obj):
     # get the activity_log_storage object and create the finduserset
+    print "Importing CSV data..."
     csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
+    print "Finished importing CSV data."
+    print "Converting data to activity_log_storage object..."
     activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows)
+    print "Finished converting to activity_log_storage_object."
+    print "Finding user sets..."
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
+    print "Found user sets."
 
     discrete_difference_logs = []
     # For each controller in the git_scraper_controllers, get commits
     # associated with them and perform the requisite operations
     # for creating discrete_difference_logs and outputting
     for controller in settings_obj.get("git_scraper_controllers"):
+        print "Begin working on controller: " + controller
+        print "  Beginning scrape."
         git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), get_follow_path_from_controller(controller), controller)
-        commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_start"), settings_obj.get("global_end"))
+        print "  Getting all commits for controller: " + controller
+        commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
         commit_storage = CommitStorage(commits)
+        print "  Obtaining data percentiles for commits."
         commit_storage.get_data_percentiles()
 
         # Create the commit attribute factory, used to generate the 

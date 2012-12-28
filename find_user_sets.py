@@ -1,10 +1,10 @@
-
+import datetime
 
 def binary_search_on_attribute(activity_logs, value, start, end, attribute):
     if end <= start:
         return start
     mid = (start+end)/2
-    current_attr = activity_logs.data_attributes[attribute]
+    current_attr = activity_logs[mid].data_attributes[attribute]
     if current_attr > value:
         return binary_search_on_attribute(activity_logs, value, start, mid-1, attribute)
     elif current_attr < value:
@@ -37,9 +37,9 @@ class FindUserSet:
     # the users who only saw the controller before the commit.
     def compute_user_log_sets(self, controller, commit_datetime):
         logs_time_sorted = self.activity_log_storage.get_sorted_by("created_at")
-        commit_index = binary_search_on_attribute(logs_time_sorted, commit_datetime, 0, len(logs_time_sorted)-1)
-        lower_index = binary_search_on_attribute(logs_time_sorted, commit_datetime-datetime.timedelta(days=self.settings.get("commit_half_window")), 0, commit_index)
-        upper_index = binary_search_on_attributes(logs_time_sorted, commit_datetime+datetime.timedelta(days=self.settings.get("commit_half_window")), commit_index, len(logs_time_sorted)-1)
+        commit_index = binary_search_on_attribute(logs_time_sorted, commit_datetime, 0, len(logs_time_sorted)-1, "created_at")
+        lower_index = binary_search_on_attribute(logs_time_sorted, commit_datetime-datetime.timedelta(days=self.settings.get("commit_half_window")), 0, commit_index, "created_at")
+        upper_index = binary_search_on_attributes(logs_time_sorted, commit_datetime+datetime.timedelta(days=self.settings.get("commit_half_window")), commit_index, len(logs_time_sorted)-1, "created_at")
         
         # get the dictionaries containing all users who had activity
         # before a given commit, and before and after a commit

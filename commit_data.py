@@ -76,6 +76,7 @@ class GitCommitScraper:
         files_changed = self._get_matched_group(amount_changed_match, 1)
         insertions = self._get_matched_group(amount_changed_match, 3)
         deletions = self._get_matched_group(amount_changed_match, 5)
+        return (files_changed, insertions, deletions)
 
     def _get_matched_group(self, match, group_number):
         result = match.group(group_number)
@@ -84,17 +85,21 @@ class GitCommitScraper:
         return int(result)
     
     def get_controller_commits(self, before, after, include_quality=True):
-        git_command = "cd %s; git log --format='%H%n%ad%nend_commit' --shortstat --before='%s' --after='%s' --follow %s" % (self.directory_path, before, after, self.followpath) 
+        git_command = "cd {0}; git log --format='end_commit%H%n%ad%n' --shortstat --before='{1}' --after='{2}' --follow {3}".format(self.directory_path, before, after, self.follow_path) 
         result = os.popen(git_command).read()
         split_result = result.split("end_commit")
+        first = True 
 
         all_commits = []
         for commit_info in split_result:
+            if first:
+                first = False
+                continue
             commit_info_lines = commit_info.split("\n")
-            commit_id = commit_info_lines[1]
-            files_changed, insertions, deletions = get_commit_shortstats(commit_info_lines[0])
-            time = parser.parse(commit_info_lines[2]).replace(tzinfo=None)
-
+            commit_id = commit_info_lines[0]
+            files_changed, insertions, deletions = self.get_commit_shortstats(commit_info_lines[4])
+            time = parser.parse(commit_info_lines[1]).replace(tzinfo=None)
+                
             # create a commit object and append it to the list of commits
             commit = Commit(commit_id, self.controller, time, files_changed, insertions, deletions)
             all_commits.append(commit)
@@ -108,12 +113,12 @@ class GitCommitScraper:
         for next_commit in commits:
             if last_commit != None:
                 diff = self._get_diff_with_commit_ids(last_commit.commit_id, next_commit.commit_id)
-                quality_obj = cyclomatic_compleixty.CommitCodeQuality(diff)
+                quality_obj = cyclomatic_complexity.CommitCodeQuality(diff)
                 next_commit.set_commit_quality_obj = quality_obj
             last_commit = next_commit
 
     def _get_diff_with_commit_ids(self, commit_id1, commit_id2):
-        git_command = "cd %s; git diff %s %s" % (self.directorypath, commit_id1, commit_id2)
+        git_command = "cd %s; git diff %s %s" % (self.directory_path, commit_id1, commit_id2)
         return os.popen(git_command).read()
 
 
