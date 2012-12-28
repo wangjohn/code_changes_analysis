@@ -65,15 +65,21 @@ class Log:
 class ActivityLog:
     def __init__(self, input_lines, settings_obj):
         self.settings_obj = settings_obj
+        self.unparsed_integer = 0 
         self._convert_input_lines(input_lines, settings_obj)
 
     def _convert_input_lines(self, input_lines, settings_obj):
         for attribute, index in settings_obj.get("csv_unchanged_headers"):
             setattr(self, attribute, input_lines[index])
-        for attribute, index in settings_obj.get("csv_int_headers"):
-            setattr(self, attribute, int(input_lines[index]))
+        for attribute, index in settings_obj.get("csv_integer_headers"):
+            val = input_lines[index]
+            if val:
+                setattr(self, attribute, int(input_lines[index]))
+            else:
+                self.unparsed_integer += 1
+                setattr(self, attribute, None)
         for attribute, index in settings_obj.get("csv_date_headers"):
-            setattr(self, attribute, parser.parse(input_lines[index]).replace(tzinfo=None)
+            setattr(self, attribute, parser.parse(input_lines[index]).replace(tzinfo=None))
 
     def get(self, attribute):
         return getattr(self, attribute)

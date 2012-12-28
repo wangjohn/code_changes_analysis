@@ -21,8 +21,13 @@ def convert_to_activity_logs(all_rows, settings_obj):
     activity_logs = []
     print "Creating Activity Logs"
     for row in all_rows:
-        activity_logs.append(activity_log_storage.ActivityLog(row, settings_obj))
+        new_activity_log = activity_log_storage.ActivityLog(row, settings_obj)
+        activity_logs.append(new_activity_log)
     print "Finished creating Activity Logs"
+    unparsed_integers = 0
+    for log in activity_logs:
+        unparsed_integers += log.unparsed_integer
+    print "There were " + str(unparsed_integers) + " unparsed integers."
     return activity_log_storage.ActivityLogStorage(activity_logs, header_obj)
 
 if __name__ == '__main__':
