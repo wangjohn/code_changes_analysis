@@ -1,8 +1,10 @@
 import settings
+import read_csv_data
 from activity_log_storage import *
 from add_attributes import *
 from find_user_sets import *
 from commit_data import *
+
 
 def get_follow_path_from_controller(controller_name):
     return controller_name + "_controller.rb"
@@ -47,3 +49,6 @@ def run_data_production():
 def run_data_test():
     settings_obj = settings.Settings(production_env=False)
     run_data(settings_obj)
+
+if __name__ == '__main__':
+    run_data_test()

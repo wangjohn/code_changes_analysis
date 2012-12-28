@@ -136,7 +136,7 @@ class MovingAverages:
         return output
 
     def _get_sessions(self, windowed_logs, controllers=[]):
-        session_sets = {"total" = sets.Set()}
+        session_sets = {"total": sets.Set()}
         for controller in controllers:
             session_sets[controller] = sets.Set()
         for log in windowed_logs:
@@ -165,10 +165,10 @@ class ActivityLogAttributeFactory:
         self.activity_log_storage = activity_log_storage
 
     def get_moving_average_actions(self, time_lag):
-        self.get_moving_avg(time_lag, "actions", "user_account_id", "created_at", self._actions_moving_average_subprod))
+        self.get_moving_avg(time_lag, "actions", "user_account_id", "created_at", self._actions_moving_average_subprod)
 
     def get_moving_average_sessions(self, time_lag):
-        self.get_moving_avg(time_lag, "sessions", "user_account_id", "created_at", self._sessions_moving_average_subprod))
+        self.get_moving_avg(time_lag, "sessions", "user_account_id", "created_at", self._sessions_moving_average_subprod)
 
     def get_total_actions(self):
         self.get_total_count("actions", "user_account_id", "created_at", False)

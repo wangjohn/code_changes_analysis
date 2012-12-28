@@ -18,7 +18,7 @@ class Commit:
         self.commit_quality_obj = commit_quality_obj
 
     def get_quality(self):
-        if self.commit_quality_obj != None
+        if self.commit_quality_obj != None:
             return self.commit_quality_obj.get_quality()
         return None
 

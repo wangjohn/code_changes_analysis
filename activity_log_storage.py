@@ -70,7 +70,7 @@ class ActivityLog(Log):
 
     def _convert_to_hash(self, input_lines):
         for header in self.header_obj.get_headers():
-            Log.data_attributes[header] = Log.header_obj.get_attribute_from_header(header, input_lines)
+            self.add_attribute(header, Log.get_header(self).get_attribute_from_header(header, input_lines))
 
     def add_attribute(self, attribute_header, value):
         Log.add_attribute(self, attribute_header, value)
@@ -117,7 +117,7 @@ class HeaderObject:
         return (attribute in self.data_headers)
 
     def get_headers(self):
-        return self.data_headers.keys
+        return self.data_headers.keys()
 
     def get_attribute_from_header(self, header, input_lines):
         return input_lines[self.data_headers[header]]
@@ -165,12 +165,6 @@ class DiscreteDifferenceHeader(HeaderObject):
         return HeaderObject.get_attribute_from_header(self, header, input_lines)
 
 class ActivityLogHeader(HeaderObject):
-    # unused input lines are:
-    #    "model_id": 4,
-    #    "status": 5,
-    #    "query_params": 7,
-    #    "next_profile_activity_log_id": 9,
-    #    "impersonated": 11
     def __init__(self):
         HeaderObject.__init__(self)
         data_headers = {
@@ -178,9 +172,14 @@ class ActivityLogHeader(HeaderObject):
             "user_account_id": 1,
             "controller": 2,
             "action": 3,
+            "model_id": 4,
+            "status": 5,
             "created_at": 6,
+            "query_params": 7,
             "ip_address": 8,
+            "next_profile_activity_log_id": 9,
             "session_id": 10,
+            "impersonated": 11
         }
         extra_headers = {}
         output_headers = [
@@ -192,7 +191,7 @@ class ActivityLogHeader(HeaderObject):
             "ip_address",
             "session_id"
         ]
-        HeaderObject.set_headers(data_headers, extra_headers, output_headers)
+        HeaderObject.set_headers(self, data_headers, extra_headers, output_headers)
     
     def check_extra_headers_presence(self, attribute):
         return HeaderObject.check_extra_headers_presence(self, attribute)
