@@ -20,8 +20,10 @@ def read_csv_data(filename, contains_header=True, verbose=True):
 def convert_to_activity_logs(all_rows):
     activity_logs = []
     header_obj = activity_log_storage.ActivityLogHeader()
+    print "Creating Activity Logs"
     for row in all_rows:
         activity_logs.append(activity_log_storage.ActivityLog(row, header_obj))
+    print "Finished creating Activity Logs"
     return activity_log_storage.ActivityLogStorage(activity_logs, header_obj)
 
 if __name__ == '__main__':
