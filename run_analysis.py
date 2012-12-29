@@ -33,7 +33,7 @@ def run_data(settings_obj):
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
     print "Found user sets."
 
-    discrete_difference_logs = []
+    writer_obj = write_csv_data.WriteCSV(settings_obj.get("output_filename"), settings_obj)
     # For each controller in the git_scraper_controllers, get commits
     # associated with them and perform the requisite operations
     # for creating discrete_difference_logs and outputting
@@ -52,14 +52,10 @@ def run_data(settings_obj):
             ba_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window"), ba_user_ids, 1)
             only_before_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window"), only_before_user_ids, 0)
             print "    Created " + str(len(ba_logs) + len(only_before_logs)) + " discrete_difference_logs"
-            discrete_difference_logs.extend(ba_logs)
-            discrete_difference_logs.extend(only_before_logs)
-
-    # use the write_csv_data.py module to write the data
-    print "Writing data to CSV."
-    writer_obj = write_csv_data.WriteCSV()
-    writer_obj.convert_to_csv(discrete_difference_logs, settings_obj.get("output_filename"), settings_obj)
-    print "Data written to: " + settings_obj.get("output_filename")
+            print "Writing data to CSV."
+            writer_obj.add_logs_to_csv(ba_logs)
+            writer_obj.add_logs_to_csv(only_before_logs)
+            print "Data written to: " + settings_obj.get("output_filename")
 
 def run_data_production():
     settings_obj = settings.Settings(production_env=True)
