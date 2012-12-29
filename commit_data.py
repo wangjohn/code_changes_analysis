@@ -36,13 +36,7 @@ class CommitStorage:
         return self.list_of_commits
 
     def get_commit_percentile(self, percentile_header, commit):
-        try:
-            return self.percentiles[percentile_header][commit.commit_id]
-        except KeyError:
-            print percentile_header
-            print commit.commit_id
-            print self.percentiles[percentile_header]
-            raise Exception("This is wrong.")
+        return self.percentiles[percentile_header][commit.commit_id]
 
     def _get_percentiles(self, attribute):
         percentile_hash = {}
