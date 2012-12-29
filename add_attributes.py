@@ -24,17 +24,14 @@ class CommitAttributeFactory:
         time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
 
         discrete_differences_results = []
-        print "Single time delta: " + str(single_time_delta)
-        print "Half Window: " + str(half_window)
         for i in xrange(-half_window/time_interval, half_window/time_interval+1, 1):
             # compute the new datetime that we care about
             time_delta = datetime.timedelta(days=time_interval*i)
-            print "Current time delta: " + str(time_delta)
+            print "  Current time delta: " + str(time_delta)
             new_datetime = commit.datetime + time_delta
     
             # compute the moving averages for each user in the set
             moving_averages = self.moving_averages.get_moving_averages(time_interval, new_datetime, users, controllers=[self.controller])
-            print "Found " + str(len(moving_averages)) + " moving averages"
             
             # add the moving_avgs information to create some discrete
             # difference logs

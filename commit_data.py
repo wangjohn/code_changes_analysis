@@ -36,7 +36,12 @@ class CommitStorage:
         return self.list_of_commits
 
     def get_commit_percentile(self, percentile_header, commit):
-        return self.percentiles[percentile_header][commit]
+        try:
+            return self.percentiles[percentile_header][commit.commit_id]
+        except KeyError:
+            print percentile_header
+            print commit.commit_id
+            print self.percentiles[percentile_header]
 
     def _get_percentiles(self, attribute):
         percentile_hash = {}
@@ -47,23 +52,25 @@ class CommitStorage:
         for i in xrange(total_num):
             next_commit = sorted_commits[i]
             next_value = getattr(next_commit, attribute)
-            if last_value == next_value:
+            if last_value == next_value and i < total_num-1:
                 length_same_seq += 1
             else:
                 if length_same_seq > 0:
                     self._set_mid_percentage(i, length_same_seq, total_num, percentile_hash, sorted_commits)
                 length_same_seq = 0
-                percentile_hash[next_commit] = float(i)/total_num 
+                if i < total_num-1:
+                    percentile_hash[next_commit.commit_id] = float(i)/total_num 
 
             last_value = next_value
         self.percentiles[attribute] = percentile_hash
-        return self.percentiles[attribute]
 
     def _set_mid_percentage(self, i, length_same_seq, total_num, percentile_hash, sorted_commits):
         mid_percentage = float(i-1-length_same_seq/2)/total_num
         for j in xrange(i-length_same_seq-1,i,1):
             current_commit = sorted_commits[j]
-            percentile_hash[current_commit] = mid_percentage
+            percentile_hash[current_commit.commit_id] = mid_percentage
+        if i >= total_num-1:
+            percentile_hash[sorted_commits[i].commit_id] = mid_percentage
 
 class GitCommitScraper:
     def __init__(self, directory_path, follow_path, controller):
