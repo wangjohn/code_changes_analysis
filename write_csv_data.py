@@ -14,7 +14,7 @@ class WriteCSV:
     # difference logs is the same. 
     def convert_to_csv(self, logs, filename, settings_obj):
         csv_data = self.convert_to_data(logs)
-        headers = settings_obj.get_headers()
+        headers = [header for header in settings_obj.get("data_output_headers")]
         
         with open(filename, 'wb') as f:
             writer = csv.writer(f)

@@ -42,6 +42,7 @@ class CommitStorage:
             print percentile_header
             print commit.commit_id
             print self.percentiles[percentile_header]
+            raise Exception("This is wrong.")
 
     def _get_percentiles(self, attribute):
         percentile_hash = {}
@@ -58,7 +59,7 @@ class CommitStorage:
                 if length_same_seq > 0:
                     self._set_mid_percentage(i, length_same_seq, total_num, percentile_hash, sorted_commits)
                 length_same_seq = 0
-                if i < total_num-1:
+                if i < total_num-1 or last_value != next_value:
                     percentile_hash[next_commit.commit_id] = float(i)/total_num 
 
             last_value = next_value
