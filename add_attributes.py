@@ -19,24 +19,25 @@ class CommitAttributeFactory:
         self.controller = controller
         self.moving_averages = MovingAverages(activity_log_storage)
 
-    def get_discrete_differences(self, commit, time_interval, total_time, users, ba_user_set=True):
-        increments = (time_interval / total_time)
+    def get_discrete_differences(self, commit, time_interval, half_window, users, ba_user_set=True):
         single_time_delta = datetime.timedelta(days=time_interval)
         time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
 
         discrete_differences_results = []
-        for i in xrange(increments):
+        print "Single time delta: " + str(single_time_delta)
+        for i in xrange(-half_window/time_interval, half_window/time_interval+1, 1):
+            # compute the new datetime that we care about
             time_delta = datetime.timedelta(days=time_interval*i)
-            before_datetime = commit.datetime - time_delta
-            after_datetime = commit.datetime + time_delta
-
-            before_averages = self.moving_averages.get_moving_averages(time_interval, before_datetime, users, controllers=[self.controller])
-            after_averages = self.moving_averages.get_moving_averages(time_interval, after_datetime, users, controllers=[self.controller])
+            new_datetime = commit.datetime + time_delta
+    
+            # compute the moving averages for each user in the set
+            moving_averages = self.moving_averages.get_moving_averages(time_interval, new_datetime, users, controllers=[self.controller])
+            print moving_averages
             
-            ddl_before = self.create_ddl_from_averages(before_averages, before_datetime, commit, -i, time_interval, ba_user_set)
-            ddl_after = self.create_ddl_from_averages(after_averages, after_datetime, commit, i, time_interval, ba_user_set)
-            discrete_differences_results.extend(ddl_before)
-            discrete_differences_results.extend(ddl_after)
+            # add the moving_avgs information to create some discrete
+            # difference logs
+            difference_logs = self.create_ddl_from_averages(moving_averages, new_datetime, commit, i, time_interval, ba_user_set)
+            discrete_differences_results.extend(difference_logs)
         return discrete_differences_results
 
     def create_ddl_from_averages(self, averages, date_of_average, commit, days_after_commit, moving_avg_timewindow, ba_user_set):
@@ -110,7 +111,7 @@ class MovingAverages:
             end_time_index = binary_search_on_attribute(current_sorted, end_time, 0, len(current_sorted)-1, "created_at")        
             time_lag_index = binary_search_on_attribute(current_sorted, end_time-datetime.timedelta(days=time_lag), 0, end_time_index, "created_at")
             user_results = {}
-            windowed_logs = sorted_user_logs[time_lag_index:(end_time_index+1)]
+            windowed_logs = current_sorted[time_lag_index:(end_time_index+1)]
             if "actions" in average_types:
                 user_results["actions"] = self._get_actions(windowed_logs, controllers)
             if "sessions" in average_types:
