@@ -9,7 +9,7 @@ class ActivityLogStorage:
     def get_sorted_by(self, sorting_value):
         if sorting_value in self.sorted_by:
             return self.sorted_by[sorting_value]
-        self.sorted_by[sorting_value] = sorted(self.activity_logs, key = lambda k : k.data_attributes[sorting_value])
+        self.sorted_by[sorting_value] = sorted(self.activity_logs, key = lambda k : k.get(sorting_value))
         return self.sorted_by[sorting_value]
 
     def get_clustered_by(self, cluster_value, secondary_sort_value):
@@ -171,10 +171,3 @@ class DiscreteDifferenceHeader(HeaderObject):
 
     def get_attribute_from_header(self, header, input_lines):
         return HeaderObject.get_attribute_from_header(self, header, input_lines)
-
-if __name__ == '__main__':
-    ddh = DiscreteDifferenceHeader()
-    data_attributes = {"user_account_id":5, "controller":2}
-    a = DiscreteDifferenceLog(data_attributes, ddh)
-    a.add_attribute("session_id", 3)
-    print a.convert_to_row()
