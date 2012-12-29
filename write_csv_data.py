@@ -12,10 +12,9 @@ class WriteCSV:
 
     # This method assumes that the header for all the discrete 
     # difference logs is the same. 
-    def convert_to_csv(self, logs, filename):
+    def convert_to_csv(self, logs, filename, settings_obj):
         csv_data = self.convert_to_data(logs)
-        header_obj = logs[0].get_header()
-        headers = header_obj.get_headers()
+        headers = settings_obj.get_headers()
         
         with open(filename, 'wb') as f:
             writer = csv.writer(f)
