@@ -51,7 +51,7 @@ class CommitAttributeFactory:
 
     def create_discrete_difference_log(self, date, commit, days_after_commit, user_account_id, moving_avg_timewindow, ba_user_set, averages_hash):
         attributes = [
-            ("user_acccount_id", user_account_id),
+            ("user_account_id", user_account_id),
             ("controller", self.controller),
             ("days_after_commit", days_after_commit),
             ("datetime", date),
