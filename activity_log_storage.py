@@ -89,85 +89,26 @@ class ActivityLog:
             output.append(self.get(attribute))
         return output
 
-class DiscreteDifferenceLog(Log):
-    def __init__(self, data_attributes, header_object):
-        Log.__init__(self, header_object)
-        Log.set_data_attributes(self, data_attributes) 
+class DiscreteDifferenceLog:
+    def __init__(self, attribute_list, settings_obj):
+        self.settings_obj = settings_obj
+        self.add_attributes_from_tuple_list(self, attribute_list)
 
-    def add_attributes_from_hash(self, attributes):
-        for attribute_header, value in attributes.iteritems():
-            self.add_attribute(attribute_header, value)
+    def add_attributes_from_tuple_list(self, attribute_list):
+        for attribute_header, value in attribute_list:
+            setattr(self, attribute_header, value)
 
     def add_attribute(self, attribute_header, value):
-        Log.add_attribute(self, attribute_header, value)
+        setattr(self, attribute_header, value)
 
-    def convert_to_row(self):
-        return Log.convert_to_row(self)
+    def get_settings_obj(self):
+        return self.settings_obj
 
     def get_header(self):
-        return Log.get_header(self)
+        return self.settings_obj.get("data_output_headers")
 
-class HeaderObject:
-    def __init__(self):
-        self.data_headers = {}
-        self.extra_headers = {}
-        self.output_headers = []
-
-    def set_headers(self, data_headers, extra_headers, output_headers):
-        self.data_headers = data_headers
-        self.extra_headers = extra_headers
-        self.output_headers = output_headers
-
-    def check_extra_headers_presence(self, attribute):
-        return (attribute in self.extra_headers)
-
-    def check_data_headers_presence(self, attribute):
-        return (attribute in self.data_headers)
-
-    def get_headers(self):
-        return self.data_headers.keys()
-
-    def get_attribute_from_header(self, header, input_lines):
-        return input_lines[self.data_headers[header]]
-
-
-class DiscreteDifferenceHeader(HeaderObject):
-    def __init__(self):
-        HeaderObject.__init__(self)
-        data_headers = {
-        }
-        extra_headers = {
-            "user_account_id",
-            "controller",
-            "days_after_commit",
-            "datetime",
-            "commit_id",
-            "commit_datetime",
-            "commit_quality",
-            "commit_files_changed",
-            "commit_insertions",
-            "commit_deletions",
-            "commit_files_changed_percentile",
-            "commit_insertions_percentile",
-            "commit_deletions_percentile",
-            "actions_total_moving_avg",
-            "sessions_total_moving_avg",
-            "actions_controller_moving_avg",
-            "sessions_controller_moving_avg",
-            "moving_avg_timewindow",
-            "ba_user_set"
-        }
-        output_headers = list(extra_headers)
-        HeaderObject.set_headers(self, data_headers, extra_headers, output_headers)
-
-    def check_extra_headers_presence(self, attribute):
-        return HeaderObject.check_extra_headers_presence(self, attribute)
-
-    def check_data_headers_presence(self, attribute):
-        return (attribute in self.data_headers)
-
-    def get_headers(self):
-        return HeaderObject.get_headers(self)
-
-    def get_attribute_from_header(self, header, input_lines):
-        return HeaderObject.get_attribute_from_header(self, header, input_lines)
+    def convert_to_row(self):
+        output = []
+        for header in self.settings_obj.get("data_output_headers"):
+            output.append(getattr(self, header))
+        return output 

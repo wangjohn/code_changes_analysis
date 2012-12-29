@@ -12,10 +12,10 @@ class CommitAttributeFactory:
     depending on how finely we want to observe the commit. We will have
     a difference log every x days from -W to +W days after the commit.
     """
-    def __init__(self, commit_storage, activity_log_storage, controller):
+    def __init__(self, commit_storage, activity_log_storage, controller, settings_obj):
         self.commit_storage = commit_storage
         self.activity_log_storage = activity_log_storage
-        self.header_obj = DiscreteDifferenceHeader()
+        self.settings_obj = settings_obj
         self.controller = controller
         self.moving_averages = MovingAverages(activity_log_storage)
 
@@ -34,7 +34,7 @@ class CommitAttributeFactory:
     
             # compute the moving averages for each user in the set
             moving_averages = self.moving_averages.get_moving_averages(time_interval, new_datetime, users, controllers=[self.controller])
-            print moving_averages
+            print "Found " + str(len(moving_averages)) + " moving averages"
             
             # add the moving_avgs information to create some discrete
             # difference logs
@@ -50,29 +50,28 @@ class CommitAttributeFactory:
         return ddl_logs
 
     def create_discrete_difference_log(self, date, commit, days_after_commit, user_account_id, moving_avg_timewindow, ba_user_set, averages_hash):
-        difference_log = DiscreteDifferenceLog({}, self.header_obj)
-        attributes = {
-            "user_acccount_id": user_account_id,
-            "controller": controller,
-            "days_after_commit": days_after_commit,
-            "datetime": date,
-            "commit_id": commit.commit_id,
-            "commit_datetime": commit.datetime,
-            "commit_quality": commit.get_quality(),
-            "commit_files_changed": commit.num_files_changed,
-            "commit_insertions": commit.insertions,
-            "commit_deletions": commit.deletions,
-            "commit_files_changed_percentile": self.commit_storage.get_commit_percentile("num_files_changed", commit),
-            "commit_insertions_percentile": self.commit_storage.get_commit_percentile("num_insertions", commit),
-            "commit_deletions_percentile": self.commit_storage.get_commit_percentile("num_deletions", commit),
-            "actions_total_moving_avg": averages_hash["actions_total"],
-            "sesssions_total_moving_avg": averages_hash["sessions_total"],
-            "actions_controller_moving_avg": averages_hash["actions_" + controller],
-            "sessions_controller_moving_avg": averages_hash["sessions_" + controller],
-            "moving_avg_timewindow": moving_avg_timewindow,
-            "ba_user_set": ba_user_set
-        }
-        difference_log.add_attributes_from_hash(attributes)
+        attributes = [
+            ("user_acccount_id", user_account_id),
+            ("controller", self.controller),
+            ("days_after_commit", days_after_commit),
+            ("datetime", date),
+            ("commit_id", commit.commit_id),
+            ("commit_datetime", commit.datetime),
+            ("commit_quality", commit.get_quality()),
+            ("commit_files_changed", commit.num_files_changed),
+            ("commit_insertions", commit.num_insertions),
+            ("commit_deletions", commit.num_deletions),
+            ("commit_files_changed_percentile", self.commit_storage.get_commit_percentile("num_files_changed"), commit),
+            ("commit_insertions_percentile", self.commit_storage.get_commit_percentile("num_insertions"), commit),
+            ("commit_deletions_percentile", self.commit_storage.get_commit_percentile("num_deletions"), commit),
+            ("actions_total_moving_avg", averages_hash["actions_total"]),
+            ("sessions_total_moving_avg", averages_hash["sessions_total"]),
+            ("actions_controller_moving_avg", averages_hash["actions_" + self.controller]),
+            ("sessions_controller_moving_avg", averages_hash["sessions_" + self.controller]),
+            ("moving_avg_timewindow", moving_avg_timewindow),
+            ("ba_user_set", ba_user_set)
+        ]
+        difference_log = DiscreteDifferenceLog(attributes, self.settings_obj)
         return difference_log 
 
 class MovingAverages:

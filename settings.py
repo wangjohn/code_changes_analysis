@@ -1,3 +1,5 @@
+import sets
+
 class Settings:
     def __init__(self, production_env=True):
         self._get_production_settings()
@@ -44,6 +46,29 @@ class Settings:
             ("created_at", 6)
         ]
         self.csv_output_row_headers = self._convert_indexed_headers(self.csv_unchanged_headers) + self._convert_indexed_headers(self.csv_integer_headers) + self._convert_indexed_headers(self.csv_date_headers) 
+
+        # Format of the output data
+        self.data_output_headers = sets.Set([
+            "user_account_id",
+            "controller",
+            "days_after_commit",
+            "datetime",
+            "commit_id",
+            "commit_datetime",
+            "commit_quality",
+            "commit_files_changed",
+            "commit_insertions",
+            "commit_deletions",
+            "commit_files_changed_percentile",
+            "commit_insertions_percentile",
+            "commit_deletions_percentile",
+            "actions_total_moving_avg",
+            "sessions_total_moving_avg",
+            "actions_controller_moving_avg",
+            "sessions_controller_moving_avg",
+            "moving_avg_timewindow",
+            "ba_user_set"
+        ])
 
     def _convert_indexed_headers(self, indexed_headers):
         return [attribute for attribute, index in indexed_headers]

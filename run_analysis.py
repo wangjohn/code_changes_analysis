@@ -40,7 +40,7 @@ def run_data(settings_obj):
     for controller in settings_obj.get("git_scraper_controllers"):
         # Create the commit attribute factory, used to generate the 
         # discrete difference logs
-        commit_attribute_factory = CommitAttributeFactory(commit_storage, activity_log_storage_obj, controller)
+        commit_attribute_factory = CommitAttributeFactory(commit_storage, activity_log_storage_obj, controller, settings_obj)
 
         # Once we have percentiles for each commit, start looking
         # at each commit and creating discrete difference logs
