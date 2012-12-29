@@ -46,6 +46,7 @@ def run_data(settings_obj):
         # at each commit and creating discrete difference logs
         for commit in commit_storage.get_commits():
             print "  Working on commit: " + commit.commit_id
+            print "    Commited on: " + str(commit.datetime)
             ba_user_ids, only_before_user_ids = find_user_set_obj.compute_user_sets(controller, commit.datetime)
             print "    Found " + str(len(ba_user_ids)) + " Before and After Users, " + str(len(only_before_user_ids)) + " Only Before Users"
             ba_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window"), ba_user_ids, 1)
