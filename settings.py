@@ -77,9 +77,6 @@ class Settings:
         return [attribute for attribute, index in indexed_headers]
 
     def _overwrite_with_test_settings(self):
-        self.global_start = "10/1/2012"
-        self.global_end = "11/24/2012"
-
         self.check_assertions = True
         self.git_scraper_controllers = ["search"]
 

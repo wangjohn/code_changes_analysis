@@ -69,4 +69,4 @@ def run_data_test():
     run_data(settings_obj)
 
 if __name__ == '__main__':
-    run_data_production()
+    run_data_test()
