@@ -106,6 +106,7 @@ class GitCommitScraper:
 
         if include_quality:
             self.get_quality_of_commits(all_commits)
+        print "    Found " + str(len(all_commits)) + " commits."
         return all_commits
 
     def get_quality_of_commits(self, commits):
@@ -114,7 +115,7 @@ class GitCommitScraper:
             if last_commit != None:
                 diff = self._get_diff_with_commit_ids(last_commit.commit_id, next_commit.commit_id)
                 quality_obj = cyclomatic_complexity.CommitCodeQuality(diff)
-                next_commit.set_commit_quality_obj = quality_obj
+                next_commit.set_commit_quality_obj(quality_obj)
             last_commit = next_commit
 
     def _get_diff_with_commit_ids(self, commit_id1, commit_id2):

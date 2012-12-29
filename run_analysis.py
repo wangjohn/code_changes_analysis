@@ -11,6 +11,17 @@ def get_follow_path_from_controller(controller_name):
     return controller_name + "_controller.rb"
 
 def run_data(settings_obj):
+    # get the commits for each controller
+    for controller in settings_obj.get("git_scraper_controllers"):
+        print "Begin working on controller: " + controller
+        print "  Beginning scrape of git logs."
+        git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), get_follow_path_from_controller(controller), controller)
+        print "  Getting all commits for controller: " + controller
+        commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
+        commit_storage = CommitStorage(commits)
+        print "  Obtaining data percentiles for commits."
+        commit_storage.get_data_percentiles()
+
     # get the activity_log_storage object and create the finduserset
     print "Importing CSV data..."
     csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
@@ -27,15 +38,6 @@ def run_data(settings_obj):
     # associated with them and perform the requisite operations
     # for creating discrete_difference_logs and outputting
     for controller in settings_obj.get("git_scraper_controllers"):
-        print "Begin working on controller: " + controller
-        print "  Beginning scrape."
-        git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), get_follow_path_from_controller(controller), controller)
-        print "  Getting all commits for controller: " + controller
-        commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
-        commit_storage = CommitStorage(commits)
-        print "  Obtaining data percentiles for commits."
-        commit_storage.get_data_percentiles()
-
         # Create the commit attribute factory, used to generate the 
         # discrete difference logs
         commit_attribute_factory = CommitAttributeFactory(commit_storage, activity_log_storage_obj, controller)
