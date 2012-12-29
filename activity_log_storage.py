@@ -65,7 +65,7 @@ class DiscreteDifferenceLog:
     def add_attributes_from_tuple_list(self, attribute_list):
         for attribute_header, value in attribute_list:
             if self.settings_obj.get("check_assertions") and attribute_header not in self.settings_obj.get("data_output_headers"):
-                raise Exception("Attempting to add an undefined attribute.")
+                raise Exception("Attempting to add an undefined attribute: " + attribute_header)
             setattr(self, attribute_header, value)
 
     def get_settings_obj(self):
