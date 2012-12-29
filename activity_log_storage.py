@@ -60,7 +60,7 @@ class ActivityLog:
 class DiscreteDifferenceLog:
     def __init__(self, attribute_list, settings_obj):
         self.settings_obj = settings_obj
-        self.add_attributes_from_tuple_list(self, attribute_list)
+        self.add_attributes_from_tuple_list(attribute_list)
 
     def add_attributes_from_tuple_list(self, attribute_list):
         for attribute_header, value in attribute_list:
