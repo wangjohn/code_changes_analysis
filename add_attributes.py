@@ -27,7 +27,7 @@ class CommitAttributeFactory:
         for i in xrange(-half_window/time_interval, half_window/time_interval+1, 1):
             # compute the new datetime that we care about
             time_delta = datetime.timedelta(days=time_interval*i)
-            print "  Current time delta: " + str(time_delta)
+            print "    Current time delta: " + str(time_delta)
             new_datetime = commit.datetime + time_delta
     
             # compute the moving averages for each user in the set

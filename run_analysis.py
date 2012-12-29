@@ -57,7 +57,7 @@ def run_data(settings_obj):
     # use the write_csv_data.py module to write the data
     print "Writing data to CSV."
     writer_obj = write_csv_data.WriteCSV()
-    writer_obj.convert_to_csv(discrete_difference_logs, settings_obj.get("output_filename"))
+    writer_obj.convert_to_csv(discrete_difference_logs, settings_obj.get("output_filename"), settings_obj)
     print "Data written to: " + settings_obj.get("output_filename")
 
 def run_data_production():
