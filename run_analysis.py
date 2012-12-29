@@ -45,11 +45,12 @@ def run_data(settings_obj):
         # Once we have percentiles for each commit, start looking
         # at each commit and creating discrete difference logs
         for commit in commit_storage.get_commits():
-            print "  Finding user sets for commit: " + commit.commit_id
+            print "  Working on commit: " + commit.commit_id
             ba_user_ids, only_before_user_ids = find_user_set_obj.compute_user_sets(controller, commit.datetime)
-            print "    Get discrete difference logs for commit: " + commit.commit_id
+            print "    Found " + str(len(ba_user_ids)) + " Before and After Users, " + str(len(only_before_user_ids)) + " Only Before Users"
             ba_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window")*2, ba_user_ids, True)
             only_before_logs = commit_attribute_factory.get_discrete_differences(commit, settings_obj.get("commit_window_interval"), settings_obj.get("commit_half_window")*2, only_before_user_ids, False)
+            print "    Created " + str(len(ba_logs) + len(only_before_logs)) + " discrete_difference_logs"
             discrete_difference_logs.extend(ba_logs)
             discrete_difference_logs.extend(only_before_logs)
 
