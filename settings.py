@@ -12,8 +12,12 @@ class Settings:
         self.global_end = "11/24/2012"
 
         # The time before and after a commit to examine
-        self.commit_half_window = 2
+        self.commit_half_window = 15
         self.commit_window_interval = 1
+
+        # The minimum number of actions needed in a half_window in 
+        # order to be included in the sample.
+        self.min_actions_threshold = 1
 
         # Git scraper file locations
         self.git_scraper_directory_path = "/home/john/panjiva_web_branches/web/app/controllers"
