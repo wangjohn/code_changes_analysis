@@ -23,7 +23,7 @@ class WriteCSV:
     def add_logs_to_csv(self, logs):
         csv_data = self.convert_to_data(logs)
         
-        with open(filename, 'a') as f:
+        with open(self.filename, 'a') as f:
             writer = csv.writer(f)
             writer.writerows(csv_data)
 
