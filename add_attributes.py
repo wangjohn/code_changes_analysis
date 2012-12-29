@@ -19,7 +19,7 @@ class CommitAttributeFactory:
         self.controller = controller
         self.moving_averages = MovingAverages(activity_log_storage, settings_obj)
 
-    def get_discrete_differences(self, commit, time_interval, half_window, users, ba_user_set=True):
+    def get_discrete_differences(self, commit, time_interval, half_window, users, ba_user_set=1):
         single_time_delta = datetime.timedelta(days=time_interval)
         time_sorted_logs = self.activity_log_storage.sorted_by["created_at"]
 
