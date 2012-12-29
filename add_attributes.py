@@ -25,9 +25,11 @@ class CommitAttributeFactory:
 
         discrete_differences_results = []
         print "Single time delta: " + str(single_time_delta)
+        print "Half Window: " + str(half_window)
         for i in xrange(-half_window/time_interval, half_window/time_interval+1, 1):
             # compute the new datetime that we care about
             time_delta = datetime.timedelta(days=time_interval*i)
+            print "Current time delta: " + str(time_delta)
             new_datetime = commit.datetime + time_delta
     
             # compute the moving averages for each user in the set
@@ -132,8 +134,6 @@ class MovingAverages:
                 current_controller = log.get("controller")
                 if current_controller in output:
                     output[current_controller] += 1
-        if only_controllers:
-            del output["total"]
         return output
 
     def _get_sessions(self, windowed_logs, controllers=[]):
