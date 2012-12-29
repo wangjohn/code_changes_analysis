@@ -29,38 +29,6 @@ class ActivityLogStorage:
         self.clustered_by[key_tuple] = sorted_new_cluster
         return self.clustered_by[key_tuple]
 
-
-class Log:
-    def __init__(self, header_object):
-        self.header_obj = header_object
-        self.data_attributes = {}
-
-    def set_data_attributes(self, data_attributes):
-        self.data_attributes = data_attributes
-        self.check_data_attributes()
-
-    def add_attribute(self, attribute_header, value):
-        if not (self.header_obj.check_extra_headers_presence(attribute_header) or self.header_obj.check_data_headers_presence(attribute_header)):
-            raise Exception("Attempting to add an undefined extra attribute: " + attribute_header)
-        self.data_attributes[attribute_header] = value
-
-    def check_data_attributes(self):
-        for attribute_header in self.data_attributes.iterkeys():
-            if not (self.header_obj.check_data_headers_presence(attribute_header) or self.header_obj.check_extra_headers_presence(attribute_header)):
-                raise Exception("There exists an undefined data attribute: " + attribute_header)
-        
-    def convert_to_row(self):
-        row = []
-        for data_header in self.header_obj.output_headers:
-            if data_header in self.data_attributes:
-                row.append(self.data_attributes[data_header])
-            else:
-                row.append('')
-        return row
-
-    def get_header(self):
-        return self.header_obj
-
 class ActivityLog:
     def __init__(self, input_lines, settings_obj):
         self.settings_obj = settings_obj
@@ -96,10 +64,9 @@ class DiscreteDifferenceLog:
 
     def add_attributes_from_tuple_list(self, attribute_list):
         for attribute_header, value in attribute_list:
+            if self.settings_obj.get("check_assertions") and attribute not in self.settings_obj.get("data_output_headers"):
+                raise Exception("Attempting to add an undefined attribute.")
             setattr(self, attribute_header, value)
-
-    def add_attribute(self, attribute_header, value):
-        setattr(self, attribute_header, value)
 
     def get_settings_obj(self):
         return self.settings_obj

@@ -17,7 +17,7 @@ class CommitAttributeFactory:
         self.activity_log_storage = activity_log_storage
         self.settings_obj = settings_obj
         self.controller = controller
-        self.moving_averages = MovingAverages(activity_log_storage)
+        self.moving_averages = MovingAverages(activity_log_storage, settings_obj)
 
     def get_discrete_differences(self, commit, time_interval, half_window, users, ba_user_set=True):
         single_time_delta = datetime.timedelta(days=time_interval)
@@ -75,9 +75,11 @@ class CommitAttributeFactory:
         return difference_log 
 
 class MovingAverages:
-    def __init__(self, activity_log_storage):
+    def __init__(self, activity_log_storage, settings_obj):
         self.activity_log_storage = activity_log_storage
-        self.allowable_averages = sets.Set(["actions","sessions"])
+        self.settings_obj = settings_obj
+        if self.settings_obj.get("check_assertions"):
+            self.allowable_averages = sets.Set(["actions","sessions"])
 
     def _convert_averages_to_single_hash(self, averages_output):
         output_hash = {}
@@ -104,7 +106,8 @@ class MovingAverages:
     # If only_controllers is true, then only the actions and 
     # sessions for the controller will be presented.
     def get_moving_averages(self, time_lag, end_time, users, average_types={"actions","sessions"}, controllers=[]):
-        self.check_average_types(average_types)
+        if self.settings_obj.get("check_assertions"):
+            self.check_average_types(average_types)
         sorted_user_logs = self.activity_log_storage.get_clustered_by("user_account_id", "created_at")
         averages = {}
         for user_account_id in users:

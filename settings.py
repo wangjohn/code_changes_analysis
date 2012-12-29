@@ -29,6 +29,9 @@ class Settings:
             "info"
         ]
 
+        # Assertions and checking
+        self.check_assertions = False
+
         # CSV data
         self.csv_data_filename = "/home/john/activity_log_out.csv"
         self.csv_data_contains_header = True
@@ -77,8 +80,8 @@ class Settings:
         self.global_start = "10/1/2012"
         self.global_end = "11/24/2012"
 
+        self.check_assertions = True
         self.git_scraper_controllers = ["search"]
-        #self.csv_data_filename = "/home/john/activity_log_out_test.csv"
 
     def get(self, setting):
         return getattr(self, setting)
