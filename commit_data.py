@@ -47,7 +47,7 @@ class CommitStorage:
         for i in xrange(total_num):
             next_commit = sorted_commits[i]
             next_value = getattr(next_commit, attribute)
-            if last_value == next_value and i < total_num-1:
+            if next_value != None and last_value == next_value and i < total_num-1:
                 length_same_seq += 1
             else:
                 if length_same_seq > 0:
