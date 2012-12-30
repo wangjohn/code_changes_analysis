@@ -54,6 +54,7 @@ class CommitAttributeFactory:
             ("commit_id", commit.commit_id),
             ("commit_datetime", commit.datetime),
             ("commit_quality", commit.get_quality()),
+            ("commit_author", commit.commit_author),
             ("commit_files_changed", commit.num_files_changed),
             ("commit_insertions", commit.num_insertions),
             ("commit_deletions", commit.num_deletions),

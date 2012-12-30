@@ -63,6 +63,7 @@ class Settings:
             "commit_id",
             "commit_datetime",
             "commit_quality",
+            "commit_author",
             "commit_files_changed",
             "commit_insertions",
             "commit_deletions",
