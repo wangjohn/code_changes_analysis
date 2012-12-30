@@ -17,7 +17,7 @@ class Settings:
 
         # The minimum number of actions needed in a half_window in 
         # order to be included in the sample.
-        self.min_actions_threshold = 1
+        self.min_actions_threshold = 5
 
         # Git scraper file locations
         self.git_scraper_directory_path = "/home/john/panjiva_web_branches/web/app/controllers"
