@@ -47,7 +47,7 @@ class FindUserSet:
             activity_log = activity_logs[i]
             if self._check_data_attribute_validity(activity_log, data_attribute, required_attribute_value, negated):
                 self._add_to_dict_with_attribute(users, activity_log, "user_account_id", limit_ua_ids)
-        self._delete_users_under_min_actions_threshold(users)
+        users = self._delete_users_under_min_actions_threshold(users)
         return users
 
     def _check_data_attribute_validity(self, activity_log, data_attribute, required_attribute_value, negated):
@@ -64,6 +64,8 @@ class FindUserSet:
                 attribute_dict[attribute_id] = [activity_log]
             
     def _delete_users_under_min_actions_threshold(self, user_log_set):
+        new_set = {}
         for user_account_id, logs in user_log_set.iteritems():
-            if len(logs) < self.settings_obj.get("min_actions_threshold"):
-                del user_log_set[user_account_id]
+            if len(logs) >= self.settings_obj.get("min_actions_threshold"):
+                new_set[user_account_id] = logs
+        return new_set
