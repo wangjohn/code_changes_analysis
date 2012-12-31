@@ -4,12 +4,13 @@ from dateutil import parser
 import cyclomatic_complexity
 
 class Commit:
-    def __init__(self, commit_id, controller, datetime, num_files_changed, num_insertions, num_deletions, author_name):
+    def __init__(self, commit_id, controller, datetime, num_files_changed, num_insertions, num_deletions, author_name, message):
         self.datetime = datetime
         self.commit_id = commit_id
         self.controller = controller
         self.commit_quality_obj = None
         self.commit_author = author_name
+        self.message = message
 
         self.num_files_changed = num_files_changed
         self.num_insertions = num_insertions
@@ -88,7 +89,7 @@ class GitCommitScraper:
         return int(result)
     
     def get_controller_commits(self, before, after, include_quality=True):
-        git_command = "cd {0}; git log --format='end_commit%H%n%ad%n%cn' --shortstat --before='{1}' --after='{2}' --follow {3}".format(self.directory_path, before, after, self.follow_path) 
+        git_command = "cd {0}; git log --format='end_commit%H%n%ad%n%cn%n%s' --shortstat --before='{1}' --after='{2}' --follow {3}".format(self.directory_path, before, after, self.follow_path) 
         result = os.popen(git_command).read()
         split_result = result.split("end_commit")
         first = True 
@@ -100,12 +101,13 @@ class GitCommitScraper:
                 continue
             commit_info_lines = commit_info.split("\n")
             commit_id = commit_info_lines[0]
-            files_changed, insertions, deletions = self.get_commit_shortstats(commit_info_lines[4])
+            files_changed, insertions, deletions = self.get_commit_shortstats(commit_info_lines[5])
             time = parser.parse(commit_info_lines[1]).replace(tzinfo=None)
             author_name = commit_info_lines[2]
+            message = commit_info_lines[3]
 
             # create a commit object and append it to the list of commits
-            commit = Commit(commit_id, self.controller, time, files_changed, insertions, deletions, author_name)
+            commit = Commit(commit_id, self.controller, time, files_changed, insertions, deletions, author_name, message)
             all_commits.append(commit)
 
         if include_quality:
