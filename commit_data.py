@@ -12,7 +12,6 @@ def get_view_follow_path(controller):
     return "/views/" + controller
 
 class Commit:
-
     attributes_and_default_values = [
         ("datetime", None),
         ("commit_id", None),
@@ -90,6 +89,11 @@ class CommitMerger:
         # get a new quality object for the entire diff
         commit_quality_obj = self._get_quality_obj(getattr(first_commit, "commit_id"))
         new_commit.set_commit_quality_obj(commit_quality_obj)
+
+        # OR together all the controller and view indicators
+        for attribute in ["controller_change", "view_change"]:
+            attribute_changed_indicator = any([getattr(commit, attribute) for commit in commit_list]))
+            new_commit.set_attribute(attribute, attribute_changed_indicator)
 
         return new_commit
 
@@ -209,6 +213,12 @@ class GitCommitScraper:
             else:
                 merged_commits.append(commit_list[0])
         return merged_commits
+
+    def get_all_commits(self, before_after, include_quality=True):
+        view_commits = self.get_view_commits(before, after, include_quality)
+        controller_commits = self.get_controller_commits(before, after, include_quality)
+        commits_multilist = [view_commits, controller_commits]
+        return self._merge_commits(commits_multilist)
 
     def get_view_commits(self, before, after, include_quality=True):
         follow_path = get_view_follow_path(self.controller)
