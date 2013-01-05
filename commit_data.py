@@ -16,6 +16,8 @@ class Commit:
         self.num_insertions = num_insertions
         self.num_deletions = num_deletions
 
+        self.category = None
+
     def set_commit_quality_obj(self, commit_quality_obj):
         self.commit_quality_obj = commit_quality_obj
 
