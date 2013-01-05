@@ -21,6 +21,8 @@ def run_data(settings_obj):
         commit_storage = CommitStorage(commits)
         print "  Obtaining data percentiles for commits."
         commit_storage.get_data_percentiles()
+        print "  Categorizing commits by messages."
+        commit_storage.categorize_commits()
 
     # get the activity_log_storage object and create the finduserset
     print "Importing CSV data..."

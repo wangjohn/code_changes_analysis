@@ -2,6 +2,7 @@ import os
 import re
 from dateutil import parser
 import cyclomatic_complexity
+import ngram_parser
 
 class Commit:
     def __init__(self, commit_id, controller, datetime, num_files_changed, num_insertions, num_deletions, author_name, message):
@@ -38,6 +39,10 @@ class CommitStorage:
 
     def get_commits(self):
         return self.list_of_commits
+
+    def categorize_commits(self):
+        parser = ngram_parser.NGramParser(self.list_of_commits)
+        parser.categorize_messages()
 
     def get_commit_percentile(self, percentile_header, commit):
         return self.percentiles[percentile_header][commit.commit_id]

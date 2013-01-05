@@ -1,8 +1,9 @@
 import re
 import settings
 import run_analysis
+import collections
+import write_csv_data
 from commit_data import *
-
 
 class MessageCategorizer:
     def __init__(self):
@@ -22,7 +23,7 @@ class MessageCategorizer:
         index, max_val = max(enumerate(results), key=lambda k : k[1])
         if max_val == 0:
             return None
-        return self.category_regex_list[max_val][0]
+        return self.category_regex_list[index][0]
 
 class NGramParser:
     def __init__(self, commits):
@@ -44,14 +45,11 @@ class NGramParser:
         ngram_occurence_tuples = [(ngram, occurences) for ngram, occurences in all_ngrams.iteritems()]
         return self.sort_ngram_tuples(ngram_occurence_tuples)
 
-    def categorize_message(self, message, default_group=None):
-        return self.message_categorizer.categorize_message(message)
-
     def categorize_messages(self):
         categories = {}
         for commit in self.commits:
             message = self._clean_message(commit.message)
-            category = self.categorize_message(message)
+            category = self.message_categorizer.categorize_message(message)
             commit.category = category
 
     def _parse_ngrams_of_message(self, message, n):
@@ -77,7 +75,9 @@ class NGramParser:
             print ngram[0], ": ", ngram[1]
 
 
-def iterate_through_controllers(settings_obj, eval_statement):
+def iterate_through_controllers(settings_obj, eval_statement, write_commits=False):
+    if write_commits:
+        csv_writer = write_csv_data.WriteCSV(settings_obj.get("csv_data_filename"), settings_obj)
     for controller in settings_obj.get("git_scraper_controllers"):
         git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), run_analysis.get_follow_path_from_controller(controller), controller)
         commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
@@ -85,15 +85,19 @@ def iterate_through_controllers(settings_obj, eval_statement):
 
         print "Using controller: " + controller
         eval(eval_statement)
+        if write_commits:
+            logs = [(c.category, c.message) for c in commits]
+            csv_writer.append_rows_to_csv(logs)
 
 def print_ngrams(settings_obj, n, num_to_show=50):
     eval_statement = "parser.print_parsed_ngrams(%s, %s)" % (n, num_to_show)
     iterate_through_controllers(settings_obj, eval_statement) 
 
-def categorize_commits(settings_obj):
+def categorize_commits(settings_obj, write_commits=False):
     eval_statement = "parser.categorize_messages()"
-    iterate_through_controllers(settings_obj, eval_statement)
+    iterate_through_controllers(settings_obj, eval_statement, write_commits)
         
 if __name__ == '__main__':
     settings_obj = settings.Settings(production_env=False)
-    categorize_commits(settings_obj)
+    settings_obj.overwrite_with_ngram_csv_settings()
+    categorize_commits(settings_obj, True)

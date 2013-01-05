@@ -61,6 +61,7 @@ class CommitAttributeFactory:
             ("commit_files_changed_percentile", self.commit_storage.get_commit_percentile("num_files_changed", commit)),
             ("commit_insertions_percentile", self.commit_storage.get_commit_percentile("num_insertions", commit)),
             ("commit_deletions_percentile", self.commit_storage.get_commit_percentile("num_deletions", commit)),
+            ("commit_category", commit.category),
             ("actions_total_moving_avg", averages_hash["actions_total"]),
             ("sessions_total_moving_avg", averages_hash["sessions_total"]),
             ("actions_controller_moving_avg", averages_hash["actions_" + self.controller]),

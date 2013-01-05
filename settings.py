@@ -70,6 +70,7 @@ class Settings:
             "commit_files_changed_percentile",
             "commit_insertions_percentile",
             "commit_deletions_percentile",
+            "commit_category",
             "actions_total_moving_avg",
             "sessions_total_moving_avg",
             "actions_controller_moving_avg",
@@ -84,6 +85,13 @@ class Settings:
     def _overwrite_with_test_settings(self):
         self.check_assertions = True
         self.git_scraper_controllers = ["search"]
+
+    def overwrite_with_ngram_csv_settings(self):
+        self.csv_data_filename = "/home/john/code_changes_analysis/test_categorization.csv"
+        self.data_output_headers = [
+            "category",
+            "commit_message"
+        ]
 
     def get(self, setting):
         return getattr(self, setting)

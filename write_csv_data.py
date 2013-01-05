@@ -22,10 +22,11 @@ class WriteCSV:
     # difference logs is the same. 
     def add_logs_to_csv(self, logs):
         csv_data = self.convert_to_data(logs)
-        
+        self.append_rows_to_csv(csv_data) 
+    
+    def append_rows_to_csv(self, rows):
         with open(self.filename, 'a') as f:
             writer = csv.writer(f)
-            writer.writerows(csv_data)
+            writer.writerows(rows)
 
-    
 
