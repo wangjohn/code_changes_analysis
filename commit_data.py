@@ -91,12 +91,16 @@ class CommitMerger:
         commit_quality_obj = self._get_quality_obj(getattr(first_commit, "commit_id"))
         new_commit.set_commit_quality_obj(commit_quality_obj)
 
-
         return new_commit
 
     def _get_shortstats(self, commit_id, controller):
         controller_path = get_controller_follow_path(controller)
+        controller_results = self._get_shortstats_with_followpath(commit_id, controller_path)
 
+        view_path = get_view_follow_path(controller)
+        view_results = self._get_shortstats_with_followpath(commit_id, view_path)
+
+        return [sum(tup) for tup in zip(controller_results, view_results)]
 
     def _get_shortstats_with_followpath(self, commit_id, follow_path):
         git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat -- follow {2}".format(settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
@@ -105,11 +109,20 @@ class CommitMerger:
         shortstat_results = CommitShortStats.get_commit_shortstats(shortstat_line)
         return shortstat_results
 
-    def _get_quality_obj(self, commit_id):
-        git_diff_command = "cd {0}; git show {1}"
-        diff = os.popen(git_diff_command).read()
-        complexity_obj = cyclomatic_complexity.CommitCodeQuality(diff)
-        return complexity_obj
+    def _get_commit_quality_obj(self, commit_id, controller):
+        controller_path = get_controller_follow_path(controller)
+        controller_diff = self._get_diff(commit_id, controller_path)
+
+        view_path = get_view_follow_path(controller)
+        view_diff = self._get_diff(commit_id, controller_path)
+
+        combined_diff = controller_diff + view_diff
+        commit_quality_obj = cyclomatic_complexity.CommitCodeQuality(combined_diff)
+        return commit_quality_obj
+
+    def _get_diff(self, commit_id, follow_path):
+        git_diff_command = "cd {0}; git show {1} -- follow {2}".format(settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
+        return os.popen(git_diff_command).read()
 
 class CommitStorage:
     def __init__(self, list_of_commits):
