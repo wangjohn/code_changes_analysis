@@ -126,25 +126,28 @@ class CommitStorage:
         if i >= total_num-1:
             percentile_hash[sorted_commits[i].commit_id] = mid_percentage
 
+class CommitShortStats:
+    @staticmethod
+    def get_commit_shortstats(result):
+        amount_changed_match = re.search("([0-9]+) files? changed(, ([0-9]+) insertions?\\(\\+\\))?(, ([0-9]+) deletions?\\(\\-\\))?", result)
+        files_changed = CommitShortStats._get_matched_group(amount_changed_match, 1)
+        insertions = CommitShortStats._get_matched_group(amount_changed_match, 3)
+        deletions = CommitShortStats._get_matched_group(amount_changed_match, 5)
+        return (files_changed, insertions, deletions)
+
+    @staticmethod
+    def _get_matched_group(match, group_number):
+        result = match.group(group_number)
+        if result == None:
+            return 0
+        return int(result)
+
 class GitCommitScraper:
     def __init__(self, directory_path, follow_path, controller):
         self.directory_path = directory_path
         self.follow_path = follow_path
         self.controller = controller
 
-    def get_commit_shortstats(self, result):
-        amount_changed_match = re.search("([0-9]+) files? changed(, ([0-9]+) insertions?\\(\\+\\))?(, ([0-9]+) deletions?\\(\\-\\))?", result)
-        files_changed = self._get_matched_group(amount_changed_match, 1)
-        insertions = self._get_matched_group(amount_changed_match, 3)
-        deletions = self._get_matched_group(amount_changed_match, 5)
-        return (files_changed, insertions, deletions)
-
-    def _get_matched_group(self, match, group_number):
-        result = match.group(group_number)
-        if result == None:
-            return 0
-        return int(result)
-    
     def _merge_commits(self, commits_multilist):
         commit_dict = {}
         for commit_list in commits_multilist:
@@ -187,7 +190,7 @@ class GitCommitScraper:
                 continue
             commit_info_lines = commit_info.split("\n")
             commit_id = commit_info_lines[0]
-            files_changed, insertions, deletions = self.get_commit_shortstats(commit_info_lines[5])
+            files_changed, insertions, deletions = CommitShortStats.get_commit_shortstats(commit_info_lines[5])
             time = parser.parse(commit_info_lines[1]).replace(tzinfo=None)
             author_name = commit_info_lines[2]
             message = commit_info_lines[3]
