@@ -20,7 +20,7 @@ class Settings:
         self.min_actions_threshold = 5
 
         # Git scraper file locations
-        self.git_scraper_directory_path = "/home/john/panjiva_web_branches/web/app/controllers"
+        self.git_scraper_directory_path = "/home/john/panjiva_web_branches/web/app"
         self.git_scraper_controllers = [
             "search",
             "my_panjiva",

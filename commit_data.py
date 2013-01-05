@@ -5,27 +5,77 @@ import cyclomatic_complexity
 import ngram_parser
 
 class Commit:
-    def __init__(self, commit_id, controller, datetime, num_files_changed, num_insertions, num_deletions, author_name, message):
-        self.datetime = datetime
-        self.commit_id = commit_id
-        self.controller = controller
-        self.commit_quality_obj = None
-        self.commit_author = author_name
-        self.message = message
 
-        self.num_files_changed = num_files_changed
-        self.num_insertions = num_insertions
-        self.num_deletions = num_deletions
+    attributes_and_default_values = [
+        ("datetime", None),
+        ("commit_id", None),
+        ("controller", None),
+        ("commit_quality_obj", None),
+        ("commit_author", None),
+        ("message", None),
+        ("num_files_changed", None),
+        ("num_insertions", None),
+        ("num_deletions", None),
+        ("category", None),
+        ("controller_change", False),
+        ("view_change", False)
+    ]
+    initial_required_attributes = [
+        "commit_id",
+        "controller",
+        "datetime",
+        "num_files_changed",
+        "num_insertions",
+        "num_deletions",
+        "author_name",
+        "message"
+    ]
 
-        self.category = None
+    def __init__(self, initial_variables_hash, error_checking=True):
+        self._initialize_attributes(error_checking)
+
+    def _initialize_attributes(self, initial_variables_hash, error_checking=True):
+        for attribute, default_val in Commit.attributes_and_default_values:
+            self.set_attribute(attribute, default_val)
+        # do some error checking
+        if error_checking:
+            self._error_checking_of_initial_attributes(initial_variables_hash)
+        for required_attribute in Commit.initial_required_attributes:
+            self.set_attribute(required_attribute, initial_variables_hash[required_attribute])
+
+    def _error_checking_of_initial_attributes(self, initial_variables_hash):
+        if len(Commit.initial_required_attributes) != len(initial_variables_hash):
+            raise Exception("Passed an initial variables hash which does not match the initial required attributes for a Commit initialization.")
+        for required_attribute in Commit.initial_required_attributes:
+            if required_attribute not in initial_variables_hash:
+                raise Exception("Initial variables hash for a Commit initialization does not contain the required attribute: " + required_attribute)
 
     def set_commit_quality_obj(self, commit_quality_obj):
         self.commit_quality_obj = commit_quality_obj
+
+    def set_attribute(self, attribute, value):
+        setattr(self, attribute, value)
 
     def get_quality(self):
         if self.commit_quality_obj != None:
             return self.commit_quality_obj.get_quality()
         return None
+
+class CommitMerger:
+    def __init__(self, settings_obj):
+        self.settings_obj = settings_obj
+
+    def merge_commits(commit_list):
+        # copy the initial attributes from the first commit
+        first_commit = commit_list[0]
+        new_commit_attributes = {}
+        for attribute in Commit.initial_required_attributes:
+            new_commit_attributes[attribute] = getattr(first_commit, attribute)
+
+        # overwrite select attributes
+
+        new_commit = Commit(new_commit_attributes)
+        
 
 class CommitStorage:
     def __init__(self, list_of_commits):
@@ -95,8 +145,37 @@ class GitCommitScraper:
             return 0
         return int(result)
     
+    def _merge_commits(self, commits_multilist):
+        commit_dict = {}
+        for commit_list in commits_multilist:
+            for commit in commit_list:
+                current_list = commit_dict.setdefault(commit.commit_id, [])
+                current_list.append(commit)
+        merged_commits = []
+        for commit_id, commit_list in commit_dict.iteritems():
+            if len(commit_list) >= 2:
+                resulting_merge = CommitMerger.merge_commits(commit_list)
+                merged_commits.append(resulting_merge)
+            else:
+                merged_commits.append(commit_list[0])
+        return merged_commits
+
+    def get_view_commits(self, before, after, include_quality=True):
+        follow_path = "/views/" + self.controller
+        commits = self.get_commits_from_followpath(before, after, follow_path, include_quality)
+        for commit in commits:
+            commit.set_attribute("view_change", True)
+        return commits
+
     def get_controller_commits(self, before, after, include_quality=True):
-        git_command = "cd {0}; git log --format='end_commit%H%n%ad%n%cn%n%s' --shortstat --before='{1}' --after='{2}' --follow {3}".format(self.directory_path, before, after, self.follow_path) 
+        follow_path = "/controllers/" + self.controller + "_controller.rb"
+        commits = self.get_commits_from_followpath(before, after, follow_path, include_quality)
+        for commit in commits:
+            commit.set_attribute("controller_change", True)
+        return commits
+
+    def get_commits_from_followpath(self, before, after, follow_path, include_quality=True):
+        git_command = "cd {0}; git log --format='end_commit%H%n%ad%n%cn%n%s' --shortstat --before='{1}' --after='{2}' --follow {3}".format(self.directory_path, before, after, follow_path) 
         result = os.popen(git_command).read()
         split_result = result.split("end_commit")
         first = True 
@@ -114,7 +193,18 @@ class GitCommitScraper:
             message = commit_info_lines[3]
 
             # create a commit object and append it to the list of commits
-            commit = Commit(commit_id, self.controller, time, files_changed, insertions, deletions, author_name, message)
+            initial_values_hash = {
+                "commit_id": commit_id, 
+                "controller": self.controller, 
+                "datetime": time,
+                "num_files_changed": files_changed,
+                "num_insertions": insertions,
+                "num_deletions": deletions,
+                "author_name": author_name,
+                "message": message,
+            }
+
+            commit = Commit(initial_values_hash)
             all_commits.append(commit)
 
         if include_quality:
