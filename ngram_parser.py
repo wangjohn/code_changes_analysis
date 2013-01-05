@@ -12,20 +12,17 @@ class MessageCategorizer:
             ("cleanup", re.compile("(\s|^)(clean(ed|up)?)(\s|$)")),
             ("addition", re.compile("(\s|^)(add(ed|ing)?|creat(ed|e|ing)?)(\s|$)")),
             ("removal", re.compile("(\s|^)(remov(ed|ing|al|es|e)?|delet(ed|e|ing|es)?)(\s|$)")),
-            (None, 0),
         ]
 
-    def _category_fitness(self, message, category_tuple):
-        if category_tuple[0] == None:
-            return 0
-        num_regexes = len(category_tuple[1].findall(message))
-        if num_regexes > 0:
-            return num_regexes
-        return -1
+    def get_category_results(self, message):
+        return [len(regex.findall(message)) for cat, regex in self.category_regex_list]
 
     def categorize_message(self, message):
-        best_tuple = max(self.category_regex_list, key = lambda k : self._category_fitness(message, k))
-        return best_tuple[0]
+        results = self.get_category_results(message) 
+        index, max_val = max(enumerate(results), key=lambda k : k[1])
+        if max_val == 0:
+            return None
+        return self.category_regex_list[max_val][0]
 
 class NGramParser:
     def __init__(self, commits):
@@ -56,8 +53,6 @@ class NGramParser:
             message = self._clean_message(commit.message)
             category = self.categorize_message(message)
             commit.category = category
-            if category == None:
-                print message
 
     def _parse_ngrams_of_message(self, message, n):
         message = self._clean_message(message)
