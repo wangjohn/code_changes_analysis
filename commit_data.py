@@ -75,7 +75,19 @@ class CommitMerger:
         # overwrite select attributes
 
         new_commit = Commit(new_commit_attributes)
-        
+
+    def _get_shortstats(self, commit_id):
+        git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat"
+        result = os.popen(git_shortstats_command).read()
+        shortstat_line = result.split("\n")[0]
+        shortstat_results = CommitShortStats.get_commit_shortstats(shortstat_line)
+        return shortstat_results
+
+    def _get_quality_obj(self, commit_id):
+        git_diff_command = "cd {0}; git show {1}"
+        diff = os.popen(git_diff_command).read()
+        complexity_obj = cyclomatic_complexity.CommitCodeQuality(diff)
+        return complexity_obj
 
 class CommitStorage:
     def __init__(self, list_of_commits):
