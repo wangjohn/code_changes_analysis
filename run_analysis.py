@@ -7,9 +7,6 @@ from find_user_sets import *
 from commit_data import *
 
 
-def get_follow_path_from_controller(controller_name):
-    return controller_name + "_controller.rb"
-
 def run_data(settings_obj):
     # get the commits for each controller
     for controller in settings_obj.get("git_scraper_controllers"):

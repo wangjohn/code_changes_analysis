@@ -4,6 +4,13 @@ from dateutil import parser
 import cyclomatic_complexity
 import ngram_parser
 
+
+def get_controller_follow_path(controller):
+    return "/controllers/" + controller + "_controller.rb"
+
+def get_view_follow_path(controller):
+    return "/views/" + controller
+
 class Commit:
 
     attributes_and_default_values = [
@@ -72,12 +79,27 @@ class CommitMerger:
         for attribute in Commit.initial_required_attributes:
             new_commit_attributes[attribute] = getattr(first_commit, attribute)
 
-        # overwrite select attributes
-
+        ## overwrite select attributes
+        # get the shortstats from the entire diff
+        files_changed, insertions, deletions = self._get_shortstats(getattr(first_commit, "commit_id"))
+        new_commit_attributes["num_files_changed"] = files_changed
+        new_commit_attributes["num_insertions"] = insertions
+        new_commit_attributes["num_deletions"] = deletions
         new_commit = Commit(new_commit_attributes)
+        
+        # get a new quality object for the entire diff
+        commit_quality_obj = self._get_quality_obj(getattr(first_commit, "commit_id"))
+        new_commit.set_commit_quality_obj(commit_quality_obj)
 
-    def _get_shortstats(self, commit_id):
-        git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat"
+
+        return new_commit
+
+    def _get_shortstats(self, commit_id, controller):
+        controller_path = get_controller_follow_path(controller)
+
+
+    def _get_shortstats_with_followpath(self, commit_id, follow_path):
+        git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat -- follow {2}".format(settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
         result = os.popen(git_shortstats_command).read()
         shortstat_line = result.split("\n")[0]
         shortstat_results = CommitShortStats.get_commit_shortstats(shortstat_line)
@@ -176,14 +198,14 @@ class GitCommitScraper:
         return merged_commits
 
     def get_view_commits(self, before, after, include_quality=True):
-        follow_path = "/views/" + self.controller
+        follow_path = get_view_follow_path(self.controller)
         commits = self.get_commits_from_followpath(before, after, follow_path, include_quality)
         for commit in commits:
             commit.set_attribute("view_change", True)
         return commits
 
     def get_controller_commits(self, before, after, include_quality=True):
-        follow_path = "/controllers/" + self.controller + "_controller.rb"
+        follow_path = get_controller_follow_path(self.controller)
         commits = self.get_commits_from_followpath(before, after, follow_path, include_quality)
         for commit in commits:
             commit.set_attribute("controller_change", True)
