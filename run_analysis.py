@@ -14,7 +14,7 @@ def run_data(settings_obj):
         print "  Beginning scrape of git logs."
         git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), get_follow_path_from_controller(controller), controller)
         print "  Getting all commits for controller: " + controller
-        commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
+        commits = git_commit_scraper.get_all_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
         commit_storage = CommitStorage(commits)
         print "  Obtaining data percentiles for commits."
         commit_storage.get_data_percentiles()
