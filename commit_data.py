@@ -38,7 +38,7 @@ class Commit:
     ]
 
     def __init__(self, initial_variables_hash, error_checking=True):
-        self._initialize_attributes(error_checking)
+        self._initialize_attributes(initial_variables_hash, error_checking)
 
     def _initialize_attributes(self, initial_variables_hash, error_checking=True):
         for attribute, default_val in Commit.attributes_and_default_values:
