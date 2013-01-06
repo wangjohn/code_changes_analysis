@@ -71,6 +71,8 @@ class Settings:
             "commit_insertions_percentile",
             "commit_deletions_percentile",
             "commit_category",
+            "commit_controller_change",
+            "commit_view_change",
             "actions_total_moving_avg",
             "sessions_total_moving_avg",
             "actions_controller_moving_avg",
