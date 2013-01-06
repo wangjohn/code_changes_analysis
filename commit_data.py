@@ -98,10 +98,10 @@ class CommitMerger:
         return new_commit
 
     def _get_shortstats(self, commit_id, controller):
-        controller_path = get_controller_follow_path(controller, self.directory_path)
+        controller_path = get_controller_follow_path(controller, self.settings_obj.get("git_scraper_directory_path"))
         controller_results = self._get_shortstats_with_followpath(commit_id, controller_path)
 
-        view_path = get_view_follow_path(controller, self.directory_path)
+        view_path = get_view_follow_path(controller, self.settings_obj.get("git_scraper_directory_path"))
         view_results = self._get_shortstats_with_followpath(commit_id, view_path)
 
         return [sum(tup) for tup in zip(controller_results, view_results)]
