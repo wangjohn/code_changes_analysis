@@ -107,17 +107,17 @@ class CommitMerger:
         return [sum(tup) for tup in zip(controller_results, view_results)]
 
     def _get_shortstats_with_followpath(self, commit_id, follow_path):
-        git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat -- follow {2}".format(settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
+        git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat -- follow {2}".format(self.settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
         result = os.popen(git_shortstats_command).read()
         shortstat_line = result.split("\n")[0]
         shortstat_results = CommitShortStats.get_commit_shortstats(shortstat_line)
         return shortstat_results
 
     def _get_commit_quality_obj(self, commit_id, controller):
-        controller_path = get_controller_follow_path(controller, self.directory_path)
+        controller_path = get_controller_follow_path(controller, self.settings_obj.get("git_scraper_directory_path"))
         controller_diff = self._get_diff(commit_id, controller_path)
 
-        view_path = get_view_follow_path(controller, self.directory_path)
+        view_path = get_view_follow_path(controller, self.settings_obj.get("git_scraper_directory_path"))
         view_diff = self._get_diff(commit_id, controller_path)
 
         combined_diff = controller_diff + view_diff
@@ -125,7 +125,7 @@ class CommitMerger:
         return commit_quality_obj
 
     def _get_diff(self, commit_id, follow_path):
-        git_diff_command = "cd {0}; git show {1} -- follow {2}".format(settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
+        git_diff_command = "cd {0}; git show {1} -- follow {2}".format(self.settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
         return os.popen(git_diff_command).read()
 
 class CommitStorage:
