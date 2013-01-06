@@ -87,7 +87,7 @@ class CommitMerger:
         new_commit = Commit(new_commit_attributes)
         
         # get a new quality object for the entire diff
-        commit_quality_obj = self._get_quality_obj(getattr(first_commit, "commit_id"), getattr(first_commit, "controller"))
+        commit_quality_obj = self._get_commit_quality_obj(getattr(first_commit, "commit_id"), getattr(first_commit, "controller"))
         new_commit.set_commit_quality_obj(commit_quality_obj)
 
         # OR together all the controller and view indicators
@@ -109,7 +109,7 @@ class CommitMerger:
     def _get_shortstats_with_followpath(self, commit_id, follow_path):
         git_shortstats_command = "cd {0}; git show {1} --oneline --shortstat -- follow {2}".format(self.settings_obj.get("git_scraper_directory_path"), commit_id, follow_path)
         result = os.popen(git_shortstats_command).read()
-        shortstat_line = result.split("\n")[0]
+        shortstat_line = result.split("\n")[1]
         shortstat_results = CommitShortStats.get_commit_shortstats(shortstat_line)
         return shortstat_results
 
