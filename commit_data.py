@@ -71,7 +71,7 @@ class CommitMerger:
     def __init__(self, settings_obj):
         self.settings_obj = settings_obj
 
-    def merge_commits(commit_list):
+    def merge_commits(self, commit_list):
         # copy the initial attributes from the first commit
         first_commit = commit_list[0]
         new_commit_attributes = {}
