@@ -194,9 +194,10 @@ class CommitShortStats:
         return int(result)
 
 class GitCommitScraper:
-    def __init__(self, directory_path, controller):
-        self.directory_path = directory_path
+    def __init__(self, settings_obj, controller):
+        self.directory_path = settings_obj.get("git_scraper_directory_path")
         self.controller = controller
+        self.commit_merger = CommitMerger(settings_obj)
 
     def _merge_commits(self, commits_multilist):
         commit_dict = {}
@@ -207,7 +208,7 @@ class GitCommitScraper:
         merged_commits = []
         for commit_id, commit_list in commit_dict.iteritems():
             if len(commit_list) >= 2:
-                resulting_merge = CommitMerger.merge_commits(commit_list)
+                resulting_merge = self.commit_merger.merge_commits(commit_list)
                 merged_commits.append(resulting_merge)
             else:
                 merged_commits.append(commit_list[0])
@@ -227,7 +228,7 @@ class GitCommitScraper:
         return commits
 
     def get_controller_commits(self, before, after, include_quality=True):
-        follow_path = get_controller_follow_path(self.controller)
+        follow_path = get_controller_follow_path(self.controller, self.directory_path)
         commits = self.get_commits_from_followpath(before, after, follow_path, include_quality)
         for commit in commits:
             commit.set_attribute("controller_change", True)

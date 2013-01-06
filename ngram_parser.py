@@ -79,8 +79,8 @@ def iterate_through_controllers(settings_obj, eval_statement, write_commits=Fals
     if write_commits:
         csv_writer = write_csv_data.WriteCSV(settings_obj.get("csv_data_filename"), settings_obj)
     for controller in settings_obj.get("git_scraper_controllers"):
-        git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), run_analysis.get_follow_path_from_controller(controller), controller)
-        commits = git_commit_scraper.get_controller_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
+        git_commit_scraper = GitCommitScraper(settings_obj, controller)
+        commits = git_commit_scraper.get_all_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
         parser = NGramParser(commits)
 
         print "Using controller: " + controller

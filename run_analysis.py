@@ -12,7 +12,7 @@ def run_data(settings_obj):
     for controller in settings_obj.get("git_scraper_controllers"):
         print "Begin working on controller: " + controller
         print "  Beginning scrape of git logs."
-        git_commit_scraper = GitCommitScraper(settings_obj.get("git_scraper_directory_path"), controller)
+        git_commit_scraper = GitCommitScraper(settings_obj, controller)
         print "  Getting all commits for controller: " + controller
         commits = git_commit_scraper.get_all_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
         commit_storage = CommitStorage(commits)
