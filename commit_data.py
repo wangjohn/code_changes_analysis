@@ -80,14 +80,14 @@ class CommitMerger:
 
         ## overwrite select attributes
         # get the shortstats from the entire diff
-        files_changed, insertions, deletions = self._get_shortstats(getattr(first_commit, "commit_id"))
+        files_changed, insertions, deletions = self._get_shortstats(getattr(first_commit, "commit_id"), getattr(first_commit, "controller"))
         new_commit_attributes["num_files_changed"] = files_changed
         new_commit_attributes["num_insertions"] = insertions
         new_commit_attributes["num_deletions"] = deletions
         new_commit = Commit(new_commit_attributes)
         
         # get a new quality object for the entire diff
-        commit_quality_obj = self._get_quality_obj(getattr(first_commit, "commit_id"))
+        commit_quality_obj = self._get_quality_obj(getattr(first_commit, "commit_id"), getattr(first_commit, "controller"))
         new_commit.set_commit_quality_obj(commit_quality_obj)
 
         # OR together all the controller and view indicators
