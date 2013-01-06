@@ -5,11 +5,11 @@ import cyclomatic_complexity
 import ngram_parser
 
 
-def get_controller_follow_path(controller):
-    return "/controllers/" + controller + "_controller.rb"
+def get_controller_follow_path(controller, directory_path):
+    return directory_path + "/controllers/" + controller + "_controller.rb"
 
-def get_view_follow_path(controller):
-    return "/views/" + controller
+def get_view_follow_path(controller, directory_path):
+    return directory_path + "/views/" + controller
 
 class Commit:
     attributes_and_default_values = [
@@ -92,16 +92,16 @@ class CommitMerger:
 
         # OR together all the controller and view indicators
         for attribute in ["controller_change", "view_change"]:
-            attribute_changed_indicator = any([getattr(commit, attribute) for commit in commit_list]))
+            attribute_changed_indicator = any([getattr(commit, attribute) for commit in commit_list])
             new_commit.set_attribute(attribute, attribute_changed_indicator)
 
         return new_commit
 
     def _get_shortstats(self, commit_id, controller):
-        controller_path = get_controller_follow_path(controller)
+        controller_path = get_controller_follow_path(controller, self.directory_path)
         controller_results = self._get_shortstats_with_followpath(commit_id, controller_path)
 
-        view_path = get_view_follow_path(controller)
+        view_path = get_view_follow_path(controller, self.directory_path)
         view_results = self._get_shortstats_with_followpath(commit_id, view_path)
 
         return [sum(tup) for tup in zip(controller_results, view_results)]
@@ -114,10 +114,10 @@ class CommitMerger:
         return shortstat_results
 
     def _get_commit_quality_obj(self, commit_id, controller):
-        controller_path = get_controller_follow_path(controller)
+        controller_path = get_controller_follow_path(controller, self.directory_path)
         controller_diff = self._get_diff(commit_id, controller_path)
 
-        view_path = get_view_follow_path(controller)
+        view_path = get_view_follow_path(controller, self.directory_path)
         view_diff = self._get_diff(commit_id, controller_path)
 
         combined_diff = controller_diff + view_diff
@@ -194,9 +194,8 @@ class CommitShortStats:
         return int(result)
 
 class GitCommitScraper:
-    def __init__(self, directory_path, follow_path, controller):
+    def __init__(self, directory_path, controller):
         self.directory_path = directory_path
-        self.follow_path = follow_path
         self.controller = controller
 
     def _merge_commits(self, commits_multilist):
@@ -214,14 +213,14 @@ class GitCommitScraper:
                 merged_commits.append(commit_list[0])
         return merged_commits
 
-    def get_all_commits(self, before_after, include_quality=True):
+    def get_all_commits(self, before, after, include_quality=True):
         view_commits = self.get_view_commits(before, after, include_quality)
         controller_commits = self.get_controller_commits(before, after, include_quality)
         commits_multilist = [view_commits, controller_commits]
         return self._merge_commits(commits_multilist)
 
     def get_view_commits(self, before, after, include_quality=True):
-        follow_path = get_view_follow_path(self.controller)
+        follow_path = get_view_follow_path(self.controller, self.directory_path)
         commits = self.get_commits_from_followpath(before, after, follow_path, include_quality)
         for commit in commits:
             commit.set_attribute("view_change", True)
