@@ -2,7 +2,7 @@ import csv
 import activity_log_storage
 import parse_date
 
-def read_csv_to_activity_log_storage(filename, settings_obj, start_time, end_time, contains_header=True, verbose=True, old_activity_logs=None):
+def read_csv_to_activity_log_storage(filename, settings_obj, start_time, end_time, contains_header=True, old_activity_logs=None, verbose=True):
     header_row = None
     activity_log_counter = 0
     csv_row_counter = 0
