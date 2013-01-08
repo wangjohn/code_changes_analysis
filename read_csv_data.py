@@ -17,17 +17,29 @@ def read_csv_data(filename, contains_header=True, verbose=True):
 
         return all_rows
 
-def convert_to_activity_logs(all_rows, settings_obj, old_activity_logs=None):
+def find_created_at_index(settings_obj):
+    for attribute, index in settings_obj.get("csv_date_headers"):
+        if attribute == "created_at":
+            return index
+    raise Exception("The created_at attribute was not defined under the csv_date_headers in the settings object.")
+
+def is_unparsed_time_in_window(unparsed_time, start_time, end_time):
+    parsed_time = parser.parse(unparsed_time).replace(tzinfo=None)
+    return (parsed_time <= end_time and parsed_time >= start_time)
+
+def convert_to_activity_logs(all_rows, settings_obj, start_time, end_time, old_activity_logs=None):
     activity_logs = []
     print "Creating Activity Logs"
     counter = 0
+    created_at_index = find_created_at_index(settings_obj)
     for row in all_rows:
-        new_activity_log = activity_log_storage.ActivityLog(row, settings_obj)
-        activity_logs.append(new_activity_log)
-        counter += 1
-        if counter % 100000 == 0:
-            print "  Created activity log " + str(counter)
-    print "Finished creating Activity Logs"
+        if is_unparsed_time_in_window(row[created_at_index], start_time, end_time):
+            new_activity_log = activity_log_storage.ActivityLog(row, settings_obj)
+            activity_logs.append(new_activity_log)
+            counter += 1
+            if counter % 100000 == 0:
+                print "  Created activity log " + str(counter)
+    print "Finished creating {1} Activity Logs".format(str(counter))
     unparsed_integers = 0
     for log in activity_logs:
         unparsed_integers += log.unparsed_integer
