@@ -10,8 +10,8 @@ from dateutil import parser
 
 
 def run_data(settings_obj):
-    global_start = parser.parse(settings_obj.get("global_end"))
-    global_end = parser.parse(settings_obj.get("global_start"))
+    global_start = parser.parse(settings_obj.get("global_start"))
+    global_end = parser.parse(settings_obj.get("global_end"))
     
     # start and jump by increments according to the settings obj
     current_end = global_start
@@ -19,6 +19,7 @@ def run_data(settings_obj):
     while current_end < global_end:
         current_start = current_end
         current_end = current_start + datetime.timedelta(days=settings_obj.get("days_per_segment_interval"))
+        print "Using current time window: {1} - {2}".format(current_start, current_end)
         old_activity_logs = run_data_subset(settings_obj, convert_to_date(current_end), convert_to_date(current_start), old_activity_logs)
 
 def convert_to_date(datetime_obj):
