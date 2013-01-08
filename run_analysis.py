@@ -1,20 +1,37 @@
 import settings
 import read_csv_data
 import write_csv_data
+import datetime
 from activity_log_storage import *
 from add_attributes import *
 from find_user_sets import *
 from commit_data import *
+from dateutil import parser
 
 
 def run_data(settings_obj):
+    global_start = parser.parse(settings_obj.get("global_end"))
+    global_end = parser.parse(settings_obj.get("global_start"))
+    
+    # start and jump by increments according to the settings obj
+    current_end = global_start
+    old_activity_logs = None
+    while current_end < global_end:
+        current_start = current_end
+        current_end = current_start + datetime.timedelta(days=settings_obj.get("days_per_segment_interval"))
+        old_activity_logs = run_data_subset(settings_obj, convert_to_date(current_end), convert_to_date(current_start), old_activity_logs)
+
+def convert_to_date(datetime_obj):
+    return datetime_obj.strftime("%m/%d/%Y")
+
+def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=None):
     # get the commits for each controller
     for controller in settings_obj.get("git_scraper_controllers"):
         print "Begin working on controller: " + controller
         print "  Beginning scrape of git logs."
         git_commit_scraper = GitCommitScraper(settings_obj, controller)
         print "  Getting all commits for controller: " + controller
-        commits = git_commit_scraper.get_all_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))
+        commits = git_commit_scraper.get_all_commits(current_end, current_start)
         commit_storage = CommitStorage(commits)
         print "  Obtaining data percentiles for commits."
         commit_storage.get_data_percentiles()
@@ -26,7 +43,7 @@ def run_data(settings_obj):
     csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
     print "Finished importing CSV data."
     print "Converting data to activity_log_storage object..."
-    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows, settings_obj)
+    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows, settings_obj, old_activity_logs)
     print "Finished converting to activity_log_storage_object."
     print "Finding user sets..."
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
@@ -55,6 +72,12 @@ def run_data(settings_obj):
             writer_obj.add_logs_to_csv(ba_logs)
             writer_obj.add_logs_to_csv(only_before_logs)
             print "Data written to: " + settings_obj.get("output_filename")
+
+    # return the activity logs that we still need to keep track of 
+    # the next time we run this function
+    current_end_datetime = parser.parse(current_end)
+    last_half_window = current_end_datetime - datetime.timedelta(days=settings_obj.get("commit_half_window"))
+    return activity_log_storage_obj.get_logs_in_window(last_half_window, current_end_datetime) 
 
 def run_data_production():
     settings_obj = settings.Settings(production_env=True)

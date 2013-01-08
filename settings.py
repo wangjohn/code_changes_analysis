@@ -8,8 +8,9 @@ class Settings:
 
     def _get_production_settings(self):
         # Global start and end dates
-        self.global_start = "7/4/2012"
+        self.global_start = "7/4/2011"
         self.global_end = "11/24/2012"
+        self.days_per_segment_interval = 160 
 
         # The time before and after a commit to examine
         self.commit_half_window = 15
@@ -37,7 +38,7 @@ class Settings:
         self.check_assertions = False
 
         # CSV data
-        self.csv_data_filename = "/home/john/panjiva_data_files/activity_log_out.csv"
+        self.csv_data_filename = "/home/john/panjiva_data_files/activity_logs_1-1-2008.csv"
         self.csv_data_contains_header = True
         self.output_filename = "/home/john/panjiva_data_files/discrete_difference_logs_15hw.csv"
         self.csv_unchanged_headers = [

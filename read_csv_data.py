@@ -17,7 +17,7 @@ def read_csv_data(filename, contains_header=True, verbose=True):
 
         return all_rows
 
-def convert_to_activity_logs(all_rows, settings_obj):
+def convert_to_activity_logs(all_rows, settings_obj, old_activity_logs=None):
     activity_logs = []
     print "Creating Activity Logs"
     counter = 0
@@ -32,6 +32,8 @@ def convert_to_activity_logs(all_rows, settings_obj):
     for log in activity_logs:
         unparsed_integers += log.unparsed_integer
     print "There were " + str(unparsed_integers) + " unparsed integers."
+    if old_activity_logs != None:
+        activity_logs.extend(old_activity_logs)
     return activity_log_storage.ActivityLogStorage(activity_logs)
 
 if __name__ == '__main__':

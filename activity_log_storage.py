@@ -1,4 +1,5 @@
 from dateutil import parser
+import find_user_sets
 
 class ActivityLogStorage:
     def __init__(self, activity_logs):
@@ -28,6 +29,13 @@ class ActivityLogStorage:
             sorted_new_cluster[key] = sorted(logs, key = lambda k : k.get(secondary_sort_value))
         self.clustered_by[key_tuple] = sorted_new_cluster
         return self.clustered_by[key_tuple]
+
+    def get_logs_in_window(self, start_date, end_date):
+        sorted_logs = self.get_sorted_by("created_at")
+        start_index = find_user_sets.binary_search_on_attribute(sorted_logs, start_date, 0, len(sorted_logs)-1, "created_at")
+        end_index = find_user_sets.binary_search_on_attribute(sorted_logs, start_date, start_index, len(sorted_logs)-1, "created_at")
+
+        return sorted_logs[start_index:(end_index+1)]
 
 class ActivityLog:
     def __init__(self, input_lines, settings_obj):
