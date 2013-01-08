@@ -23,7 +23,7 @@ def read_csv_to_activity_log_storage(filename, settings_obj, start_time, end_tim
             if verbose and csv_row_counter % 100000 == 0:
                 print "  Read through row {0} of csv data".format(str(csv_row_counter))
     if verbose:
-        print "Finished creating {1} Activity Logs".format(str(activity_log_counter))
+        print "Finished creating {0} Activity Logs".format(str(activity_log_counter))
         unparsed_integers = 0
         for log in activity_logs:
             unparsed_integers += log.unparsed_integer
