@@ -1,6 +1,30 @@
 import csv
 import activity_log_storage
 
+def read_csv_to_activity_logs(filename, start_time, end_time, contains_header=True, verbose=True):
+    activity_logs = []
+    header_row = None
+    activity_log_counter = 0
+    created_at_index = find_created_at_index(settings_obj)
+    with open(filename, 'rb') as f:
+        reader = csv.reader(f, delimiter=',')
+        if contains_header:
+            header_row = reader.next()
+        for row in reader:
+            if is_unparsed_time_in_window(row[created_at_index], start_time, end_time):
+                new_activity_log = activity_log_storage.ActivityLog(row, settings_obj)
+                activity_logs.append(new_activity_log)
+                activity_log_counter += 1
+                if verbose and activity_log_counter % 100000 == 0:
+                    print "  Created activity log " + str(counter)
+    if verbose:
+        print "Finished creating {1} Activity Logs".format(str(activity_log_counter))
+        unparsed_integers = 0
+        for log in activity_logs:
+            unparsed_integers += log.unparsed_integer
+        print "There were " + str(unparsed_integers) + " unparsed integers."
+    return activity_logs
+
 def read_csv_data(filename, contains_header=True, verbose=True):
     all_rows = []
     header_row = None
