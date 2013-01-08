@@ -10,7 +10,7 @@ from commit_data import *
 
 
 def run_data(settings_obj):
-    global_start = datetime.datetime.strptime((settings_obj.get("global_start"), settings_obj.get("str_date_format"))
+    global_start = datetime.datetime.strptime(settings_obj.get("global_start"), settings_obj.get("str_date_format"))
     global_end = datetime.datetime.strptime(settings_obj.get("global_end"), settings_obj.get("str_date_format"))
     
     # start and jump by increments according to the settings obj
@@ -43,7 +43,7 @@ def run_data_subset(settings_obj, current_end_date_str, current_start_date_str, 
 
     # get the activity_log_storage object and create the finduserset
     print "Importing CSV data and converting to activity_logs..."
-    current_end_datetime = datetime.datetime.strptime(current_end_date_str), settings_obj.get("str_date_format"))
+    current_end_datetime = datetime.datetime.strptime(current_end_date_str, settings_obj.get("str_date_format"))
     current_start_datetime = datetime.datetime.strptime(current_start_date_str, settings_obj.get("str_date_format"))
     activity_log_storage_obj = read_csv_data.read_csv_to_activity_log_storage(settings_obj.get("csv_data_filename"), settings_obj, current_start_datetime, current_end_datetime, settings_obj.get("csv_data_contains_header"), old_activity_logs)
     print "Finished converting to activity_log_storage_object."
