@@ -18,7 +18,7 @@ def read_csv_to_activity_log_storage(filename, settings_obj, start_time, end_tim
                 activity_logs.append(new_activity_log)
                 activity_log_counter += 1
                 if verbose and activity_log_counter % 100000 == 0:
-                    print "  Created activity log " + str(counter)
+                    print "  Created activity log " + str(activity_log_counter)
             csv_row_counter += 1
             if verbose and csv_row_counter % 100000 == 0:
                 print "  Read through row {0} of csv data".format(str(csv_row_counter))
