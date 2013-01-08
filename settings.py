@@ -10,6 +10,7 @@ class Settings:
         # Global start and end dates
         self.global_start = "7/4/2011"
         self.global_end = "11/24/2012"
+        self.str_date_format = "%m/%d/%Y"
 
         # Items that govern the segments (if the input csv is too 
         # large for everything to fit into memory)

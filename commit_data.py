@@ -1,6 +1,6 @@
 import os
 import re
-from dateutil import parser
+import parse_date
 import cyclomatic_complexity
 import ngram_parser
 
@@ -248,7 +248,7 @@ class GitCommitScraper:
             commit_info_lines = commit_info.split("\n")
             commit_id = commit_info_lines[0]
             files_changed, insertions, deletions = CommitShortStats.get_commit_shortstats(commit_info_lines[5])
-            time = parser.parse(commit_info_lines[1]).replace(tzinfo=None)
+            time = parse_date.parse_to_datetime(commit_info_lines[1])
             author_name = commit_info_lines[2]
             message = commit_info_lines[3]
 
