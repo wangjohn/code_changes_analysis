@@ -19,8 +19,10 @@ def run_data(settings_obj):
     while current_end < global_end:
         current_start = current_end
         current_end = current_start + datetime.timedelta(days=settings_obj.get("days_per_segment_interval"))
-        print "Using current time window: {1} - {2}".format(current_start, current_end)
-        old_activity_logs = run_data_subset(settings_obj, convert_to_date(current_end), convert_to_date(current_start), old_activity_logs, old_csv_rows)
+        current_start_as_date = convert_to_date(current_start)
+        current_end_as_date = convert_to_date(current_end)
+        print "Using current time window: {0} to {1}".format(current_start_as_date, current_end_as_date)
+        old_activity_logs = run_data_subset(settings_obj, current_end_as_date, current_start_as_date, old_activity_logs)
 
 def convert_to_date(datetime_obj):
     return datetime_obj.strftime("%m/%d/%Y")
