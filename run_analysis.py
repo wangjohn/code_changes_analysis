@@ -19,22 +19,22 @@ def run_data(settings_obj):
     while current_end < global_end:
         current_start = current_end
         current_end = current_start + datetime.timedelta(days=settings_obj.get("days_per_segment_interval"))
-        current_start_as_date = convert_to_date(current_start)
-        current_end_as_date = convert_to_date(current_end)
-        print "Using current time window: {0} to {1}".format(current_start_as_date, current_end_as_date)
-        old_activity_logs = run_data_subset(settings_obj, current_end_as_date, current_start_as_date, old_activity_logs)
+        current_start_date_str = convert_to_date(current_start)
+        current_end_date_str = convert_to_date(current_end)
+        print "Using current time window: {0} to {1}".format(current_start_date_str, current_end_date_str)
+        old_activity_logs = run_data_subset(settings_obj, current_end_date_str, current_start_date_str, old_activity_logs)
 
 def convert_to_date(datetime_obj):
     return datetime_obj.strftime("%m/%d/%Y")
 
-def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=None):
+def run_data_subset(settings_obj, current_end_date_str, current_start_date_str, old_activity_logs=None):
     # get the commits for each controller
     for controller in settings_obj.get("git_scraper_controllers"):
         print "Begin working on controller: " + controller
         print "  Beginning scrape of git logs."
         git_commit_scraper = GitCommitScraper(settings_obj, controller)
         print "  Getting all commits for controller: " + controller
-        commits = git_commit_scraper.get_all_commits(current_end, current_start)
+        commits = git_commit_scraper.get_all_commits(current_end_date_str, current_start_date_str)
         commit_storage = CommitStorage(commits)
         print "  Obtaining data percentiles for commits."
         commit_storage.get_data_percentiles()
@@ -43,7 +43,9 @@ def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=
 
     # get the activity_log_storage object and create the finduserset
     print "Importing CSV data and converting to activity_logs..."
-    activity_log_storage_obj = read_csv_data.read_csv_to_activity_log_storage(settings_obj.get("csv_data_filename"), settings_obj, current_start, current_end, settings_obj.get("csv_data_contains_header"), old_activity_logs)
+    current_end_datetime = parser.parse(current_end_date_str).replace(tzinfo=None)
+    current_start_datetime = parser.parse(current_start_date_str).replace(tzinfo=None)
+    activity_log_storage_obj = read_csv_data.read_csv_to_activity_log_storage(settings_obj.get("csv_data_filename"), settings_obj, current_start_datetime, current_end_datetime, settings_obj.get("csv_data_contains_header"), old_activity_logs)
     print "Finished converting to activity_log_storage_object."
     print "Finding user sets..."
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
@@ -75,7 +77,6 @@ def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=
 
     # return the activity logs that we still need to keep track of 
     # the next time we run this function
-    current_end_datetime = parser.parse(current_end)
     last_half_window = current_end_datetime - datetime.timedelta(days=settings_obj.get("commit_half_window"))
     old_logs = activity_log_storage_obj.get_logs_in_window(last_half_window, current_end_datetime) 
     return old_logs

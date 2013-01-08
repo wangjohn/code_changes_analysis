@@ -6,6 +6,7 @@ def read_csv_to_activity_log_storage(filename, settings_obj, start_time, end_tim
     header_row = None
     activity_log_counter = 0
     created_at_index = find_created_at_index(settings_obj)
+    activity_logs = []
     with open(filename, 'rb') as f:
         reader = csv.reader(f, delimiter=',')
         if contains_header:
