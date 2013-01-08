@@ -248,7 +248,7 @@ class GitCommitScraper:
             commit_info_lines = commit_info.split("\n")
             commit_id = commit_info_lines[0]
             files_changed, insertions, deletions = CommitShortStats.get_commit_shortstats(commit_info_lines[5])
-            time = parse_date.parse_to_datetime(commit_info_lines[1])
+            time = parse_date.parse_to_datetime_from_git(commit_info_lines[1])
             author_name = commit_info_lines[2]
             message = commit_info_lines[3]
 

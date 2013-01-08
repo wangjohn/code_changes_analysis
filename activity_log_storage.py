@@ -54,7 +54,7 @@ class ActivityLog:
                 self.unparsed_integer += 1
                 setattr(self, attribute, None)
         for attribute, index in settings_obj.get("csv_date_headers"):
-            setattr(self, attribute, parse_date.parse_to_datetime(input_lines[index])
+            setattr(self, attribute, parse_date.parse_to_datetime(input_lines[index]))
 
     def get(self, attribute):
         return getattr(self, attribute)
