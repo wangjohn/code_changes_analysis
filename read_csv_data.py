@@ -1,5 +1,6 @@
 import csv
 import activity_log_storage
+from dateutil import parser
 
 def read_csv_to_activity_log_storage(filename, settings_obj, start_time, end_time, contains_header=True, verbose=True, old_activity_logs=None):
     header_row = None
