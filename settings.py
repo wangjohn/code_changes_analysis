@@ -10,7 +10,11 @@ class Settings:
         # Global start and end dates
         self.global_start = "7/4/2011"
         self.global_end = "11/24/2012"
-        self.days_per_segment_interval = 160 
+
+        # Items that govern the segments (if the input csv is too 
+        # large for everything to fit into memory)
+        self.days_per_segment_interval = 125 
+        self.remove_old_csv_data = False
 
         # The time before and after a commit to examine
         self.commit_half_window = 15
@@ -48,10 +52,10 @@ class Settings:
         self.csv_integer_headers = [
             ("id", 0),
             ("user_account_id", 1),
-            ("session_id", 10)
+            ("session_id", 5)
         ]
         self.csv_date_headers = [
-            ("created_at", 6)
+            ("created_at", 4)
         ]
         self.csv_output_row_headers = self._convert_indexed_headers(self.csv_unchanged_headers) + self._convert_indexed_headers(self.csv_integer_headers) + self._convert_indexed_headers(self.csv_date_headers) 
 

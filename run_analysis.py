@@ -15,17 +15,17 @@ def run_data(settings_obj):
     
     # start and jump by increments according to the settings obj
     current_end = global_start
-    old_activity_logs = None
+    old_activity_logs, old_csv_rows = None, None
     while current_end < global_end:
         current_start = current_end
         current_end = current_start + datetime.timedelta(days=settings_obj.get("days_per_segment_interval"))
         print "Using current time window: {1} - {2}".format(current_start, current_end)
-        old_activity_logs = run_data_subset(settings_obj, convert_to_date(current_end), convert_to_date(current_start), old_activity_logs)
+        old_activity_logs, old_csv_rows = run_data_subset(settings_obj, convert_to_date(current_end), convert_to_date(current_start), old_activity_logs, old_csv_rows)
 
 def convert_to_date(datetime_obj):
     return datetime_obj.strftime("%m/%d/%Y")
 
-def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=None):
+def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=None, old_csv_rows=None):
     # get the commits for each controller
     for controller in settings_obj.get("git_scraper_controllers"):
         print "Begin working on controller: " + controller
@@ -41,10 +41,13 @@ def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=
 
     # get the activity_log_storage object and create the finduserset
     print "Importing CSV data..."
-    csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
+    if old_csv_rows == None:
+        csv_rows = read_csv_data.read_csv_data(settings_obj.get("csv_data_filename"), settings_obj.get("csv_data_contains_header"))
+    else:
+        csv_rows = old_csv_rows
     print "Finished importing CSV data."
     print "Converting data to activity_log_storage object..."
-    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows, settings_obj, old_activity_logs)
+    activity_log_storage_obj = read_csv_data.convert_to_activity_logs(csv_rows, settings_obj, current_start, current_end, old_activity_logs)
     print "Finished converting to activity_log_storage_object."
     print "Finding user sets..."
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
@@ -78,7 +81,14 @@ def run_data_subset(settings_obj, current_end, current_start, old_activity_logs=
     # the next time we run this function
     current_end_datetime = parser.parse(current_end)
     last_half_window = current_end_datetime - datetime.timedelta(days=settings_obj.get("commit_half_window"))
-    return activity_log_storage_obj.get_logs_in_window(last_half_window, current_end_datetime) 
+    old_logs = activity_log_storage_obj.get_logs_in_window(last_half_window, current_end_datetime) 
+
+    # if we want to keep the old csv data, then return it as 
+    # the second argument, otherwise it is None
+    if settings_obj.get("remove_old_csv_data"):
+        return (old_logs, None)
+    else:
+        return (old_logs, csv_rows)
 
 def run_data_production():
     settings_obj = settings.Settings(production_env=True)
