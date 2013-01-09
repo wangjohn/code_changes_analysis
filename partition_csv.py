@@ -71,8 +71,9 @@ class SortCSVFiles:
         current1 = reader1.next()
         current2 = reader2.next()
         new_file_rows = []
-        while counter < self.max_logs:
-            if current1 < current2 or current2 == None:
+        while counter < self.max_logs and (current1 != None or current2 != None):
+            counter += 1
+            if (current1 != None and current1 < current2) or current2 == None:
                 current1 = self._append_to_files(current1, reader1, new_file_rows)
             else:
                 current2 = self._append_to_files(current2, reader2, new_file_rows)
