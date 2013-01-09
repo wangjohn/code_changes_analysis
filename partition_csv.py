@@ -49,3 +49,46 @@ class SortCSVFiles:
         self.contains_header = contains_header
 
         self.sort_index = read_csv_data.find_created_at_index(settings_obj)
+
+    def merge(filename1, filename2, new_filename1, new_filename2, headers=True):
+        new_file_rows = []
+        with open(filename1, 'rb') as f1:
+            with open(filename2, 'rb') as f2:
+                reader1 = csv.reader(f1, delimiter=',')
+                reader2 = csv.reader(f2, delimiter=',')
+
+                # check for headers
+                if headers:
+                    headers = reader1.next()
+                    headers = reader2.next()
+
+                # walk down the file 
+                self._populate_csv_file(new_filename1, reader1, reader2, headers)
+                self._populate_csv_file(new_filename2, reader1, reader2, headers)
+
+    def _populate_csv_file(new_filename, reader1, reader2, header):
+        counter = 0
+        current1 = reader1.next()
+        current2 = reader2.next()
+        new_file_rows = []
+        while counter < self.max_logs:
+            if current1 < current2 or current2 == None:
+                current1 = self._append_to_files(current1, reader1, new_file_rows)
+            else:
+                current2 = self._append_to_files(current2, reader2, new_file_rows)
+
+        # write the new rows to the new file
+        with open(new_filename, 'wb') as f:
+            writer = csv.writer(f, delimiter=',')
+            if header:
+                writer.writerow(header)
+            writer.writerows(new_file_rows)
+
+    def _append_then_repopulate_reader(current, reader, new_file_rows):
+        new_file_rows.append(current)
+        try:
+            new_current = reader.next()
+        except StopIteration:
+            new_current = None
+        return new_current
+
