@@ -50,10 +50,18 @@ class SortCSVFiles:
 
         self.sort_index = read_csv_data.find_created_at_index(settings_obj)
 
-    def merge(filename1, filename2, new_filename1, new_filename2, headers=True):
+    def sort_files(self, num_files_per_merge):
+        for 
+
+
+    ### TODO: Need to think about how to handle filesets instead of
+    # single files, once this is done, sorting should be pretty easy.
+    def merge(self, fileset1, fileset2, new_fileset, headers=True):
         new_file_rows = []
-        with open(filename1, 'rb') as f1:
-            with open(filename2, 'rb') as f2:
+        fileset_counter1 = 0
+        fileset_counter2 = 0
+        with open(fileset1[fileset_counter1], 'rb') as f1:
+            with open(fileset2[fileset_counter2], 'rb') as f2:
                 reader1 = csv.reader(f1, delimiter=',')
                 reader2 = csv.reader(f2, delimiter=',')
 
@@ -66,7 +74,7 @@ class SortCSVFiles:
                 self._populate_csv_file(new_filename1, reader1, reader2, headers)
                 self._populate_csv_file(new_filename2, reader1, reader2, headers)
 
-    def _populate_csv_file(new_filename, reader1, reader2, header):
+    def _populate_csv_file(self, new_filename, reader1, reader2, header):
         counter = 0
         current1 = reader1.next()
         current2 = reader2.next()
@@ -85,7 +93,7 @@ class SortCSVFiles:
                 writer.writerow(header)
             writer.writerows(new_file_rows)
 
-    def _append_then_repopulate_reader(current, reader, new_file_rows):
+    def _append_then_repopulate_reader(self, current, reader, new_file_rows):
         new_file_rows.append(current)
         try:
             new_current = reader.next()
