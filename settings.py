@@ -58,7 +58,7 @@ class Settings:
         self.csv_date_headers = [
             ("created_at", 4)
         ]
-        self.csv_output_row_headers = self._convert_indexed_headers(self.csv_unchanged_headers) + self._convert_indexed_headers(self.csv_integer_headers) + self._convert_indexed_headers(self.csv_date_headers) 
+        self.csv_output_row_headers = self._convert_sorted_header_tuples(sorted(self.csv_unchanged_headers + self.csv_integer_headers + self.csv_date_headers, key = lambda k : k[1]))
 
         # Format of the output data
         self.data_output_headers = sets.Set([
@@ -87,8 +87,17 @@ class Settings:
             "ba_user_set"
         ])
 
-    def _convert_indexed_headers(self, indexed_headers):
-        return [attribute for attribute, index in indexed_headers]
+    def _convert_sorted_header_tuples(self, header_tuples):
+        max_index = header_tuples[-1][1]
+        header = []
+
+        for i in xrange(max_index+1):
+            if header_tuples[i][1] == i:
+                header.append(header_tuples[0])
+            else:
+                header.append('')
+
+        return header
 
     def _overwrite_with_test_settings(self):
         self.check_assertions = True
