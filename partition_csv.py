@@ -41,63 +41,71 @@ class PartitionCSV:
 
 
 class SortCSVFiles:
-    def __init__(self, original_filenames, temp_directory, settings_obj, max_logs=3500000, contains_header=True):
+    def __init__(self, original_filenames, directory_path, settings_obj, max_logs=3500000, contains_header=True):
         self.original_filenames = original_filenames
         self.max_logs = max_logs
-        self.temp_directory = temp_directory
+        self.directory_path = directory_path
         self.settings_obj = settings_obj
         self.contains_header = contains_header
 
         self.sort_index = read_csv_data.find_created_at_index(settings_obj)
 
-    def sort_files(self, num_files_per_merge):
-        for 
-
-
-    ### TODO: Need to think about how to handle filesets instead of
-    # single files, once this is done, sorting should be pretty easy.
-    def merge(self, fileset1, fileset2, new_fileset, headers=True):
+    # Take two filesets and merge them together into a new fileset
+    # Filesets should be lists of filenames (including the path)
+    #
+    def merge(self, fileset1, fileset2, new_fileset, header):
         new_file_rows = []
         fileset_counter1 = 0
         fileset_counter2 = 0
-        with open(fileset1[fileset_counter1], 'rb') as f1:
-            with open(fileset2[fileset_counter2], 'rb') as f2:
-                reader1 = csv.reader(f1, delimiter=',')
-                reader2 = csv.reader(f2, delimiter=',')
+        new_file_counter = 0
+        reader1 = self._read_new_file(self, filset1, fileset_counter1)
+        reader2 = self._read_new_file(self, filset2, fileset_counter2)
+        current_log1 = reader1.next()
+        current_log2 = reader2.next()
 
-                # check for headers
-                if headers:
-                    headers = reader1.next()
-                    headers = reader2.next()
+        while fileset_counter1 < len(fileset1) or fileset_counter2 < len(fileset2):
+            counter = 0
+            new_file_rows = []
+            while counter < self.max_logs:
+                counter += 1
+                if (current_log1 != None and self._compare_logs(current_log1, current_log2)) or current_log2 == None:
+                    current_log1, fileset_counter1, reader1 = self._append_then_repopulate_reader(current_log1, reader1, new_file_rows, fileset1, fileset_counter1)
+                else:
+                    current_log2, fileset_counter2, reader2 = self._append_then_repopulate_reader(current_log2, reader2, new_file_rows, fileset2, fileset_counter2)
 
-                # walk down the file 
-                self._populate_csv_file(new_filename1, reader1, reader2, headers)
-                self._populate_csv_file(new_filename2, reader1, reader2, headers)
+            # write the new rows to the new file
+            with open(self.directory_path + new_fileset[new_file_counter], 'wb') as f:
+                writer = csv.writer(f, delimiter=',')
+                if self.contains_header and header:
+                    writer.writerow(header)
+                writer.writerows(new_file_rows)
 
-    def _populate_csv_file(self, new_filename, reader1, reader2, header):
-        counter = 0
-        current1 = reader1.next()
-        current2 = reader2.next()
-        new_file_rows = []
-        while counter < self.max_logs and (current1 != None or current2 != None):
-            counter += 1
-            if (current1 != None and current1 < current2) or current2 == None:
-                current1 = self._append_to_files(current1, reader1, new_file_rows)
-            else:
-                current2 = self._append_to_files(current2, reader2, new_file_rows)
+            new_file_counter += 1
 
-        # write the new rows to the new file
-        with open(new_filename, 'wb') as f:
-            writer = csv.writer(f, delimiter=',')
-            if header:
-                writer.writerow(header)
-            writer.writerows(new_file_rows)
+    def _compare_logs(self, log1, log2):
+        return (log1[self.sort_index] < log2[self.sort_index])
+            
 
-    def _append_then_repopulate_reader(self, current, reader, new_file_rows):
+    def _read_new_file(self, fileset, fileset_counter):
+        if fileset_counter < len(fileset):
+            new_file = open(self.directory_path + fileset[fileset_counter], 'rb')
+            reader = csv.reader(new_file, 'rb')
+            if self.contains_header:
+                header = reader.next()
+            return reader
+        else:
+            return None
+
+    def _append_then_repopulate_reader(self, current, reader, new_file_rows, fileset, fileset_counter):
         new_file_rows.append(current)
         try:
             new_current = reader.next()
         except StopIteration:
-            new_current = None
-        return new_current
+            fileset_counter += 1
+            reader = self._read_new_file(fileset, fileset_counter)
+            if reader:
+                new_current = reader.next()
+            else:
+                new_current = None
+        return (new_current, fileset_counter, reader)
 
