@@ -14,7 +14,8 @@ class PartitionCSV:
         self.sort_index = read_csv_data.find_created_at_index(settings_obj)
 
     def partition_original_file(self):
-        with open(self.original_filename, 'rb') as f:
+        new_filenames = []
+        with open(self.directory_path + self.original_filename, 'rb') as f:
             reader = csv.reader(f, delimiter=',')
             header_row = None
             if self.contains_header:
@@ -24,18 +25,22 @@ class PartitionCSV:
             for row in reader:
                 current_rows.append(row)
                 if len(current_rows) >= self.max_logs:
-                    self._write_rows(self, current_rows, file_count, header_row)
+                    filename = self._write_rows(self, current_rows, file_count, header_row)
+                    new_filenames.append(filename)
                     file_count += 1
                     current_rows = []
+        return new_filenames
 
     def _write_rows(self, current_rows, file_count, header_row=None):
-        with open(self.directory_path + self.additional_base_file_name + str(file_count), 'wb') as write_file:
+        new_filename = self.original_filename + str(file_count)
+        with open(self.directory_path + new_filename, 'wb') as write_file:
             writer = csv.writer(f, delimiter=',')
             if header_row != None:
                 writer.writerow(header_row)
 
             sorted_current_rows = self._sort_current_rows_by_index(current_rows, self.sort_index)
             writer.writerows(sorted_current_rows)
+        return new_filename
 
     def _sort_current_rows_by_index(self, current_rows, index, attribute_processing_function=parse_date.parse_to_datetime):
         return sorted(current_rows, key = lambda k : attribute_processing_function(k[index]))
@@ -98,7 +103,6 @@ class SortCSVFiles:
             return filename_root + str(depth) + ".csv"
         else:
             raise Exception("Filename in the wrong format (must be csv).")
-
 
     # Take two filesets and merge them together into a new fileset
     # Filesets should be lists of filenames and the new_fileset 
@@ -163,3 +167,5 @@ class SortCSVFiles:
                 new_current = None
         return (new_current, fileset_counter, reader)
 
+if __name__ == '__main__':
+    p

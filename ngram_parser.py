@@ -77,7 +77,7 @@ class NGramParser:
 
 def iterate_through_controllers(settings_obj, eval_statement, write_commits=False):
     if write_commits:
-        csv_writer = write_csv_data.WriteCSV(settings_obj.get("csv_data_filename"), settings_obj)
+        csv_writer = write_csv_data.WriteCSV(settings_obj.get("csv_data_directory_path") + settings_obj.get("csv_data_filename"), settings_obj)
     for controller in settings_obj.get("git_scraper_controllers"):
         git_commit_scraper = GitCommitScraper(settings_obj, controller)
         commits = git_commit_scraper.get_all_commits(settings_obj.get("global_end"), settings_obj.get("global_start"))

@@ -45,7 +45,7 @@ def run_data_subset(settings_obj, current_end_date_str, current_start_date_str, 
     print "Importing CSV data and converting to activity_logs..."
     current_end_datetime = datetime.datetime.strptime(current_end_date_str, settings_obj.get("str_date_format"))
     current_start_datetime = datetime.datetime.strptime(current_start_date_str, settings_obj.get("str_date_format"))
-    activity_log_storage_obj = read_csv_data.read_csv_to_activity_log_storage(settings_obj.get("csv_data_filename"), settings_obj, current_start_datetime, current_end_datetime, settings_obj.get("csv_data_contains_header"), old_activity_logs)
+    activity_log_storage_obj = read_csv_data.read_csv_to_activity_log_storage(settings_obj.get("csv_data_directory_path") + settings_obj.get("csv_data_filename"), settings_obj, current_start_datetime, current_end_datetime, settings_obj.get("csv_data_contains_header"), old_activity_logs)
     print "Finished converting to activity_log_storage_object."
     print "Finding user sets..."
     find_user_set_obj = FindUserSet(activity_log_storage_obj, settings_obj)
