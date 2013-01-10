@@ -52,7 +52,11 @@ class SortCSVFiles:
         self.sort_index = read_csv_data.find_created_at_index(settings_obj)
         self.filename_regex = re.compile("^(.*?)\d*.csv$")
 
-    def sort(self, filenames_set, depth):
+
+    def sort(self):
+        return self._sort(self.original_filenames, 0)
+
+    def _sort(self, filenames_set, depth):
         files_per_set = 2**depth
         if len(filenames_set) <= files_per_set:
             return (filenames_set, depth)
@@ -85,7 +89,7 @@ class SortCSVFiles:
             counter += 2
 
         # Recurse with a higher depth
-        return self.sort(new_filenames_set, depth+1)
+        return self._sort(new_filenames_set, depth+1)
 
     def _modify_filename(filename, depth):
         match = self.filename_regex.match(filename)
