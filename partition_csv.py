@@ -2,6 +2,7 @@ import csv
 import parse_date
 import read_csv_data
 import re
+import settings
 
 class PartitionCSV:
     def __init__(self, original_filename, temp_directory, settings_obj, max_logs=3500000, contains_header=True):
@@ -26,13 +27,14 @@ class PartitionCSV:
                 current_rows.append(row)
                 if len(current_rows) >= self.max_logs:
                     filename = self._write_rows(self, current_rows, file_count, header_row)
+                    print "  Created new file: {0}".format(filename)
                     new_filenames.append(filename)
                     file_count += 1
                     current_rows = []
         return new_filenames
 
     def _write_rows(self, current_rows, file_count, header_row=None):
-        new_filename = self.original_filename + str(file_count)
+        new_filename = modify_filename(self.original_filename, str(file_count) + "_split")
         with open(self.directory_path + new_filename, 'wb') as write_file:
             writer = csv.writer(f, delimiter=',')
             if header_row != None:
@@ -55,13 +57,13 @@ class SortCSVFiles:
         self.contains_header = contains_header
 
         self.sort_index = read_csv_data.find_created_at_index(settings_obj)
-        self.filename_regex = re.compile("^(.*?)\d*.csv$")
-
 
     def sort(self):
         return self._sort(self.original_filenames, 0)
 
     def _sort(self, filenames_set, depth):
+        print "  Starting to sort at depth {0}.".format(str(depth))
+        print "  Current filenames_set: " + ",".join(filenames_set)
         files_per_set = 2**depth
         if len(filenames_set) <= files_per_set:
             return (filenames_set, depth)
@@ -79,7 +81,7 @@ class SortCSVFiles:
 
         # The new_filenames_set is the set of files that the newly
         # written files will be named
-        new_filenames_set = [self._modify_filename(filenames_set[i], depth) for i in xrange(len(filenames_set)-len(current_fileset))]
+        new_filenames_set = [modify_filename(filenames_set[i], depth) for i in xrange(len(filenames_set)-len(current_fileset))]
         if current_fileset:
             new_filenames_set.extend(current_fileset)
 
@@ -89,20 +91,18 @@ class SortCSVFiles:
             fileset1 = group_filenames_set[counter]
             fileset2 = group_filenames_set[counter+1]
 
+            print "    Starting to merge filesets:"
+            print "      1: " + ",".join(fileset1)
+            print "      2: " + ",".join(fileset2)
+
             self.merge(fileset1, fileset2, new_filenames_set[(counter*files_per_set):((counter+2)*files_per_set)], self.settings_obj.get("csv_output_row_headers"))
 
             counter += 2
 
+        print "  Finished sorting at depth {0}.".format(str(depth))
+
         # Recurse with a higher depth
         return self._sort(new_filenames_set, depth+1)
-
-    def _modify_filename(filename, depth):
-        match = self.filename_regex.match(filename)
-        if match:
-            filename_root = match.group(1)
-            return filename_root + str(depth) + ".csv"
-        else:
-            raise Exception("Filename in the wrong format (must be csv).")
 
     # Take two filesets and merge them together into a new fileset
     # Filesets should be lists of filenames and the new_fileset 
@@ -167,5 +167,29 @@ class SortCSVFiles:
                 new_current = None
         return (new_current, fileset_counter, reader)
 
+def modify_filename(filename, appended_modifier, filename_regex=re.compile("^(.*?)\d*.csv$")):
+    match = filename_regex.match(filename)
+    if match:
+        filename_root = match.group(1)
+        return filename_root + str(appended_modifier) + ".csv"
+    else:
+        raise Exception("Filename in the wrong format (must be csv).")
+
+def run_partition(verbose=True)
+    settings_obj = settings.PartitionSettings()
+    original_filename = settings_obj.get("csv_data_filename")
+    directory = settings_obj.get("csv_data_directory_path")
+
+    partition_csv_obj = PartitionCSV(original_filename, directory, settings_obj)
+    print "Beginning to partition the original csv file."
+    new_filenames = partition_csv_obj.partition_original_file()
+    print "Finished partitioning the original csv file."
+    
+    sort_csv_files_obj = SortCSVFiles(new_filenames, directory, settings_obj)
+    print "Beginning to sort the split csv files."
+    sort_csv_files_obj.sort()
+    print "Finished sorting the split csv files."
+     
+
 if __name__ == '__main__':
-    p
+    run_partition()

@@ -137,9 +137,9 @@ class CSVInputDataSettings:
         return getattr(self, setting)
 
 class PartitionSettings:
-    def __init__(self, make_partitions=True):
-        self.make_partitions = make_partitions
-        if make_partitions:
+    def __init__(self):
+        self.make_partitions = True
+        if self.make_partitions:
             self._get_partition_settings()
     
     def _get_partition_settings(self):
